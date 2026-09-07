@@ -72,10 +72,9 @@ button {
 
 .workspace__stage {
   position: relative;
-  display: grid;
-  place-items: center;
   min-height: 0;
   min-width: 0;
+  overflow: hidden;
 }
 
 .chrome-button {
@@ -114,10 +113,12 @@ button {
 /* ---------- Device frame ---------- */
 
 .device {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: var(--device-width);
   height: var(--device-height);
-  transform: scale(var(--device-scale, 1));
+  transform: translate(-50%, -50%) scale(var(--device-scale, 1));
   transform-origin: center center;
   background: var(--colour-device-bg);
   color: var(--colour-text-primary);

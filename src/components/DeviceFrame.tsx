@@ -24,12 +24,14 @@ export function DeviceFrame({ children, presentation, label }: DeviceFrameProps)
 
     const measure = () => {
       const { width, height } = stage.getBoundingClientRect();
-      const padding = presentation ? 0 : 48;
+      const inset = presentation ? 0 : 48;
+      // Non-presentation mode also reserves room under the device for the label.
+      const verticalInset = presentation ? 0 : 84;
       const next = Math.min(
-        (width - padding) / DEVICE_WIDTH,
-        (height - padding) / DEVICE_HEIGHT,
+        (width - inset) / DEVICE_WIDTH,
+        (height - verticalInset) / DEVICE_HEIGHT,
       );
-      setScale(Math.max(next, 0.25));
+      setScale(Math.max(next, 0.05));
     };
 
     measure();

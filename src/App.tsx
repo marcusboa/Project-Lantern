@@ -38,14 +38,16 @@ export default function App() {
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [autoAdvance, setAutoAdvance] = useState(false);
   const [transitionKey, setTransitionKey] = useState(0);
+  const [order, setOrder] = useState<string[]>(() => patentCards.map((card) => card.id));
 
-  const cards = useMemo(
-    () =>
-      statusFilter === 'All'
-        ? patentCards
-        : patentCards.filter((card) => card.curationStatus === statusFilter),
-    [statusFilter],
-  );
+  const cards = useMemo(() => {
+    const ordered = order
+      .map((id) => patentCards.find((card) => card.id === id))
+      .filter((card): card is PatentCard => card !== undefined);
+    return statusFilter === 'All'
+      ? ordered
+      : ordered.filter((card) => card.curationStatus === statusFilter);
+  }, [order, statusFilter]);
 
   const safeIndex = cards.length > 0 ? Math.min(index, cards.length - 1) : 0;
   const current = cards[safeIndex];
@@ -76,13 +78,20 @@ export default function App() {
     [goTo, safeIndex],
   );
   const shuffle = useCallback(() => {
-    if (cards.length < 2) return;
-    let candidate = safeIndex;
-    while (candidate === safeIndex) {
-      candidate = Math.floor(Math.random() * cards.length);
-    }
-    goTo(candidate);
-  }, [cards.length, goTo, safeIndex]);
+    setAutoAdvance(false);
+    setOrder((current) => {
+      const next = [...current];
+      for (let i = next.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [next[i], next[j]] = [next[j], next[i]];
+      }
+      return next;
+    });
+    setOutgoing(null);
+    setReverse(false);
+    setTransitionKey((value) => value + 1);
+    setIndex(0);
+  }, []);
 
   useEffect(() => {
     if (!outgoing) return;
@@ -98,6 +107,7 @@ export default function App() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Shift' && event.key !== 'Tab') setAutoAdvance(false);
       if (event.key === 'ArrowRight') {
         next();
       } else if (event.key === 'ArrowLeft') {
@@ -134,6 +144,7 @@ export default function App() {
                 onChange={(event) => {
                   setStatusFilter(event.target.value as CurationStatus | 'All');
                   setIndex(0);
+                  setAutoAdvance(false);
                 }}
               >
                 {STATUS_FILTERS.map((status) => (
@@ -146,7 +157,10 @@ export default function App() {
             <button
               type="button"
               className="chrome-button"
-              onClick={() => setOverviewOpen((value) => !value)}
+              onClick={() => {
+                setOverviewOpen((value) => !value);
+                setAutoAdvance(false);
+              }}
               aria-pressed={overviewOpen}
             >
               Collection
@@ -165,7 +179,10 @@ export default function App() {
             <button
               type="button"
               className="chrome-button"
-              onClick={() => setInspectorOpen((value) => !value)}
+              onClick={() => {
+                setInspectorOpen((value) => !value);
+                setAutoAdvance(false);
+              }}
               aria-pressed={inspectorOpen}
             >
               Inspector
@@ -173,7 +190,10 @@ export default function App() {
             <button
               type="button"
               className="chrome-button"
-              onClick={() => setPresentation(true)}
+              onClick={() => {
+                setPresentation(true);
+                setAutoAdvance(false);
+              }}
             >
               Presentation (F)
             </button>
@@ -211,7 +231,10 @@ export default function App() {
             titles={cards.map((card) => card.displayTitle)}
             onPrevious={previous}
             onNext={() => next()}
-            onSelect={(target) => goTo(target, { reverse: target < safeIndex })}
+            onSelect={(target) => {
+              setAutoAdvance(false);
+              goTo(target, { reverse: target < safeIndex });
+            }}
           />
         ) : null}
         {overviewOpen && current ? (
@@ -219,10 +242,14 @@ export default function App() {
             cards={cards}
             currentId={current.id}
             onSelect={(target) => {
+              setAutoAdvance(false);
               goTo(target, { reverse: target < safeIndex });
               setOverviewOpen(false);
             }}
-            onClose={() => setOverviewOpen(false)}
+            onClose={() => {
+              setAutoAdvance(false);
+              setOverviewOpen(false);
+            }}
           />
         ) : null}
       </DeviceFrame>
