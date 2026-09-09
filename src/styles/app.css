@@ -37,7 +37,9 @@ button {
 .workspace {
   display: grid;
   grid-template-rows: auto 1fr auto;
+  grid-template-columns: minmax(0, 1fr);
   height: 100%;
+  overflow: hidden;
   padding: var(--space-5);
   gap: var(--space-4);
   background:
@@ -54,9 +56,11 @@ button {
 
 .workspace__bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
+  min-width: 0;
+  gap: var(--space-3) var(--space-4);
   font-family: var(--font-technical);
   font-size: 10px;
   letter-spacing: var(--tracking-label);
@@ -66,7 +70,9 @@ button {
 
 .workspace__bar-group {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  min-width: 0;
   gap: var(--space-3);
 }
 
@@ -407,6 +413,16 @@ button {
 }
 
 @keyframes card-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+}
+
+@keyframes card-out {
   from {
     opacity: 1;
     transform: none;
@@ -639,3 +655,22 @@ button {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes card-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes card-in-reverse {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
