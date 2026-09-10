@@ -107,6 +107,14 @@ export default function App() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const inTextEntry =
+        target?.closest('select, input, textarea, [contenteditable="true"]') != null;
+      const activatesControl =
+        (event.key === 'Enter' || event.key === ' ') &&
+        target?.closest('button, a[href]') != null;
+      if (inTextEntry || activatesControl) return;
+
       if (event.key !== 'Shift' && event.key !== 'Tab') setAutoAdvance(false);
       if (event.key === 'ArrowRight') {
         next();

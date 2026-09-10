@@ -413,16 +413,6 @@ button {
 }
 
 @keyframes card-out {
-    from {
-      opacity: 1;
-    }
-    to {
-      opacity: 0;
-    }
-  }
-}
-
-@keyframes card-out {
   from {
     opacity: 1;
     transform: none;
@@ -674,3 +664,13 @@ button {
       opacity: 1;
     }
   }
+
+  @keyframes card-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+}
