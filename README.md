@@ -62,6 +62,36 @@ src/
 rendered in the card view; it is only visible in the development-only inspector panel outside
 the device canvas.
 
+### CPC classification
+
+Each card carries a `cpc: CpcClassification` — the full CPC symbol plus the hierarchy that
+leads to it:
+
+```ts
+cpc: {
+  code: 'G06N 3/006',
+  hierarchy: [
+    { symbol: 'G', title: 'Physics' },
+    { symbol: 'G06', title: 'Computing; calculating; counting' },
+    { symbol: 'G06N', title: 'Computing arrangements based on specific computational models' },
+    { symbol: 'G06N 3/00', title: 'Computing arrangements based on biological models' },
+    {
+      symbol: 'G06N 3/006',
+      title:
+        'Based on simulated virtual individual or collective life forms, e.g. social simulations or particle swarm optimisation [PSO]',
+    },
+  ],
+}
+```
+
+The chain is ordered coarsest first (section → class → subclass → main group → subgroup) and the
+last entry must be `code` itself. The card renders the code alongside the titles as a breadcrumb,
+with the leaf level emphasised; the list wraps, so any depth or title length is safe within the
+800×480 canvas.
+
+The symbols shipped with the mock records follow the real CPC scheme, but the records themselves
+are fictional — verify symbols against the official scheme before relying on them.
+
 ### Replacing a card with real patent data
 
 1. Edit or replace the entry in `src/data/patentCards.ts`, keeping every field on the
