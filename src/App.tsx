@@ -147,6 +147,8 @@ export default function App() {
             <label className="workspace__bar-group">
               <span>Status</span>
               <select
+                id="status-filter"
+                name="status-filter"
                 className="chrome-select"
                 value={statusFilter}
                 onChange={(event) => {
