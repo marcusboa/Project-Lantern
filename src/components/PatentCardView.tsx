@@ -36,6 +36,8 @@ function formatDate(isoLike: string): string {
 
 export function PatentCardView({ card, position, total, phase, reverse }: PatentCardViewProps) {
   const Diagram = diagramRegistry[card.diagramComponent];
+  const ancestors = card.cpc.hierarchy.slice(0, -1);
+  const leaf = card.cpc.hierarchy.at(-1);
   const className = [
     'card',
     phase === 'enter' ? 'card--enter' : 'card--exit',
@@ -70,6 +72,24 @@ export function PatentCardView({ card, position, total, phase, reverse }: Patent
             {card.diagramType.replace('-', ' ').toUpperCase()}
           </span>
           <p className="card__description">{card.plainLanguageDescription}</p>
+          <section className="card__cpc" aria-label="Cooperative Patent Classification">
+            <div className="card__cpc-head">
+              <span className="label">CPC</span>
+              <span className="card__cpc-code">{card.cpc.code}</span>
+            </div>
+            <ol className="card__cpc-path" title={ancestors.map((level) => `${level.symbol} ${level.title}`).join(' › ')}>
+              {ancestors.map((level) => (
+                <li className="card__cpc-level" key={level.symbol}>
+                  {level.title}
+                </li>
+              ))}
+            </ol>
+            {leaf ? (
+              <p className="card__cpc-leaf" title={leaf.title}>
+                {leaf.title}
+              </p>
+            ) : null}
+          </section>
           <dl className="card__meta">
             <div>
               <dt className="label card__meta-term">Applicant</dt>

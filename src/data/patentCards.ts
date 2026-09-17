@@ -3,6 +3,10 @@ import type { PatentCard } from '../types/patent';
 /**
  * Mock collection. All records are fictional placeholders.
  * Replace entries here with real patent records; the UI reads nothing else.
+ *
+ * CPC symbols follow the real classification scheme so the layout is realistic,
+ * but the records they are attached to are invented. Verify against the
+ * official scheme before treating any symbol here as authoritative.
  */
 export const patentCards: PatentCard[] = [
   {
@@ -14,6 +18,16 @@ export const patentCards: PatentCard[] = [
     inventor: 'A. Placeholder',
     plainLanguageDescription:
       'A canopy frame that redistributes tension across its ribs in response to wind direction and load, reducing inversion during gusts.',
+    cpc: {
+      code: 'A45B 25/02',
+      hierarchy: [
+        { symbol: 'A', title: 'Human necessities' },
+        { symbol: 'A45', title: 'Hand or travelling articles' },
+        { symbol: 'A45B', title: 'Walking sticks; umbrellas; ladies\u2019 or like fans' },
+        { symbol: 'A45B 25/00', title: 'Details of umbrellas' },
+        { symbol: 'A45B 25/02', title: 'Umbrella frames' },
+      ],
+    },
     diagramType: 'mechanism',
     diagramComponent: 'umbrella',
     sourceReference: 'internal://archive/placeholder/0000001',
@@ -30,6 +44,16 @@ export const patentCards: PatentCard[] = [
     inventor: 'B. Sample',
     plainLanguageDescription:
       'A writing instrument that advances its lead by a fixed increment each time tip pressure is released, keeping the writing point constant.',
+    cpc: {
+      code: 'B43K 21/22',
+      hierarchy: [
+        { symbol: 'B', title: 'Performing operations; transporting' },
+        { symbol: 'B43', title: 'Writing or drawing implements; bureau accessories' },
+        { symbol: 'B43K', title: 'Implements for writing or drawing' },
+        { symbol: 'B43K 21/00', title: 'Propelling pencils' },
+        { symbol: 'B43K 21/22', title: 'With automatic feed of the writing core' },
+      ],
+    },
     diagramType: 'cross-section',
     diagramComponent: 'pencil',
     sourceReference: 'internal://archive/placeholder/0000002',
@@ -46,6 +70,16 @@ export const patentCards: PatentCard[] = [
     inventor: 'C. Specimen',
     plainLanguageDescription:
       'A two-axis hinge that folds a bicycle frame along a diagonal path, locking under rider weight rather than by separate clamp.',
+    cpc: {
+      code: 'B62K 15/006',
+      hierarchy: [
+        { symbol: 'B', title: 'Performing operations; transporting' },
+        { symbol: 'B62', title: 'Land vehicles for travelling otherwise than on rails' },
+        { symbol: 'B62K', title: 'Cycles; cycle frames; cycle steering devices' },
+        { symbol: 'B62K 15/00', title: 'Collapsible or foldable cycles' },
+        { symbol: 'B62K 15/006', title: 'Folding about a transverse axis' },
+      ],
+    },
     diagramType: 'assembly',
     diagramComponent: 'bicycle',
     sourceReference: 'internal://archive/placeholder/0000003',
@@ -62,6 +96,16 @@ export const patentCards: PatentCard[] = [
     inventor: 'D. Exemplar',
     plainLanguageDescription:
       'A brewing chamber that raises pressure in two stages, extracting a first concentrate before a slower dilution pass.',
+    cpc: {
+      code: 'A47J 31/36',
+      hierarchy: [
+        { symbol: 'A', title: 'Human necessities' },
+        { symbol: 'A47', title: 'Furniture; domestic articles or appliances' },
+        { symbol: 'A47J', title: 'Kitchen equipment; coffee mills; beverage preparing apparatus' },
+        { symbol: 'A47J 31/00', title: 'Apparatus for making beverages' },
+        { symbol: 'A47J 31/36', title: 'Coffee-making apparatus with forcing of liquid under pressure' },
+      ],
+    },
     diagramType: 'cross-section',
     diagramComponent: 'coffee',
     sourceReference: 'internal://archive/placeholder/0000004',
@@ -78,6 +122,18 @@ export const patentCards: PatentCard[] = [
     inventor: 'E. Notional',
     plainLanguageDescription:
       'A diving instrument whose bearing ring stays level through a nested gimbal, so depth and heading can be read in a single glance.',
+    cpc: {
+      code: 'G01C 13/00',
+      hierarchy: [
+        { symbol: 'G', title: 'Physics' },
+        { symbol: 'G01', title: 'Measuring; testing' },
+        {
+          symbol: 'G01C',
+          title: 'Measuring distances, levels or bearings; surveying; navigation; gyroscopic instruments',
+        },
+        { symbol: 'G01C 13/00', title: 'Surveying specially adapted to open water, e.g. sea or lake' },
+      ],
+    },
     diagramType: 'assembly',
     diagramComponent: 'marine',
     sourceReference: 'internal://archive/placeholder/0000005',
@@ -94,6 +150,19 @@ export const patentCards: PatentCard[] = [
     inventor: 'F. Hypothetical',
     plainLanguageDescription:
       'An early data store in which a rotating magnetic drum passes fixed read heads, timing each word to the drum position.',
+    cpc: {
+      code: 'G11C 11/02',
+      hierarchy: [
+        { symbol: 'G', title: 'Physics' },
+        { symbol: 'G11', title: 'Information storage' },
+        { symbol: 'G11C', title: 'Static stores' },
+        {
+          symbol: 'G11C 11/00',
+          title: 'Digital stores characterised by the use of particular electric or magnetic storage elements',
+        },
+        { symbol: 'G11C 11/02', title: 'Using magnetic elements' },
+      ],
+    },
     diagramType: 'schematic',
     diagramComponent: 'computing',
     sourceReference: 'internal://archive/placeholder/0000006',
@@ -110,6 +179,16 @@ export const patentCards: PatentCard[] = [
     inventor: 'G. Illustrative',
     plainLanguageDescription:
       'A seeding head that tracks ground contour on a floating arm and meters seed at a rate set by wheel rotation, not engine speed.',
+    cpc: {
+      code: 'A01C 7/10',
+      hierarchy: [
+        { symbol: 'A', title: 'Human necessities' },
+        { symbol: 'A01', title: 'Agriculture; forestry; animal husbandry' },
+        { symbol: 'A01C', title: 'Planting; sowing; fertilising' },
+        { symbol: 'A01C 7/00', title: 'Sowing' },
+        { symbol: 'A01C 7/10', title: 'Seeders with distributing devices using rotating members' },
+      ],
+    },
     diagramType: 'mechanism',
     diagramComponent: 'agriculture',
     sourceReference: 'internal://archive/placeholder/0000007',
@@ -126,6 +205,19 @@ export const patentCards: PatentCard[] = [
     inventor: 'H. Placeholder',
     plainLanguageDescription:
       'A small headphone driver with two tuned rear chambers, one vented and one sealed, to extend low-frequency response.',
+    cpc: {
+      code: 'H04R 1/28',
+      hierarchy: [
+        { symbol: 'H', title: 'Electricity' },
+        { symbol: 'H04', title: 'Electric communication technique' },
+        { symbol: 'H04R', title: 'Loudspeakers, microphones, gramophone pick-ups or like acoustic transducers' },
+        { symbol: 'H04R 1/00', title: 'Details of transducers' },
+        {
+          symbol: 'H04R 1/28',
+          title: 'Transducer arrangements with horns or resonating chambers for high-frequency or low-frequency response',
+        },
+      ],
+    },
     diagramType: 'cross-section',
     diagramComponent: 'audio',
     sourceReference: 'internal://archive/placeholder/0000008',
@@ -142,6 +234,16 @@ export const patentCards: PatentCard[] = [
     inventor: 'I. Placeholder',
     plainLanguageDescription:
       'A washing drum with an inner paddle ring that turns against the drum, shortening wash cycles at lower water volume.',
+    cpc: {
+      code: 'D06F 37/04',
+      hierarchy: [
+        { symbol: 'D', title: 'Textiles; paper' },
+        { symbol: 'D06', title: 'Treatment of textiles or the like' },
+        { symbol: 'D06F', title: 'Laundering, drying, ironing, pressing or folding textile articles' },
+        { symbol: 'D06F 37/00', title: 'Details specific to washing machines with rotary receptacles' },
+        { symbol: 'D06F 37/04', title: 'Rotary receptacles provided with impellers or agitators' },
+      ],
+    },
     diagramType: 'assembly',
     diagramComponent: 'appliance',
     sourceReference: 'internal://archive/placeholder/0000009',
@@ -158,6 +260,16 @@ export const patentCards: PatentCard[] = [
     inventor: 'J. Placeholder',
     plainLanguageDescription:
       'A spring-driven latch that unfolds reflector ribs in sequence, holding each rib rigid before the next is released.',
+    cpc: {
+      code: 'B64G 1/222',
+      hierarchy: [
+        { symbol: 'B', title: 'Performing operations; transporting' },
+        { symbol: 'B64', title: 'Aircraft; aviation; cosmonautics' },
+        { symbol: 'B64G', title: 'Cosmonautics; vehicles or equipment therefor' },
+        { symbol: 'B64G 1/22', title: 'Parts of, or equipment specially adapted for fitting in, cosmonautic vehicles' },
+        { symbol: 'B64G 1/222', title: 'Deployable structures' },
+      ],
+    },
     diagramType: 'exploded',
     diagramComponent: 'spacecraft',
     sourceReference: 'internal://archive/placeholder/0000010',
