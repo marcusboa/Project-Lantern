@@ -25,6 +25,7 @@ function formatSequence(value: number): string {
 
 function formatDate(isoLike: string): string {
   const [year, month, day] = isoLike.split('-');
+  if (day === undefined) return isoLike;
   const months = [
     'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
     'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
@@ -38,6 +39,7 @@ export function PatentCardView({ card, position, total, phase, reverse }: Patent
   const Diagram = diagramRegistry[card.diagramComponent];
   const ancestors = card.cpc.hierarchy.slice(0, -1);
   const leaf = card.cpc.hierarchy.at(-1);
+  const hasCpc = card.cpc.code !== '' || card.cpc.hierarchy.length > 0;
   const className = [
     'card',
     phase === 'enter' ? 'card--enter' : 'card--exit',
@@ -67,29 +69,38 @@ export function PatentCardView({ card, position, total, phase, reverse }: Patent
         <div className="card__text">
           <h1 className="card__title">{card.displayTitle}</h1>
           <span className="card__date">
-            {formatDate(card.publicationDate)}
-            <span aria-hidden="true"> · </span>
+            {card.publicationDate !== '' ? (
+              <>
+                {formatDate(card.publicationDate)}
+                <span aria-hidden="true"> · </span>
+              </>
+            ) : null}
             {card.diagramType.replace('-', ' ').toUpperCase()}
           </span>
           <p className="card__description">{card.plainLanguageDescription}</p>
-          <section className="card__cpc" aria-label="Cooperative Patent Classification">
-            <div className="card__cpc-head">
-              <span className="label">CPC</span>
-              <span className="card__cpc-code">{card.cpc.code}</span>
-            </div>
-            <ol className="card__cpc-path" title={ancestors.map((level) => `${level.symbol} ${level.title}`).join(' › ')}>
-              {ancestors.map((level) => (
-                <li className="card__cpc-level" key={level.symbol}>
-                  {level.title}
-                </li>
-              ))}
-            </ol>
-            {leaf ? (
-              <p className="card__cpc-leaf" title={leaf.title}>
-                {leaf.title}
-              </p>
-            ) : null}
-          </section>
+          {hasCpc ? (
+            <section className="card__cpc" aria-label="Cooperative Patent Classification">
+              <div className="card__cpc-head">
+                <span className="label">CPC</span>
+                <span className="card__cpc-code">{card.cpc.code}</span>
+              </div>
+              <ol
+                className="card__cpc-path"
+                title={ancestors.map((level) => `${level.symbol} ${level.title}`).join(' › ')}
+              >
+                {ancestors.map((level, levelIndex) => (
+                  <li className="card__cpc-level" key={`${level.symbol}-${levelIndex}`}>
+                    {level.title}
+                  </li>
+                ))}
+              </ol>
+              {leaf ? (
+                <p className="card__cpc-leaf" title={leaf.title}>
+                  {leaf.title}
+                </p>
+              ) : null}
+            </section>
+          ) : null}
           <dl className="card__meta">
             <div>
               <dt className="label card__meta-term">Applicant</dt>
@@ -110,7 +121,15 @@ export function PatentCardView({ card, position, total, phase, reverse }: Patent
         </div>
 
         <figure className="card__figure">
-          <Diagram className="card__diagram" title={`Diagram for ${card.displayTitle}`} />
+          {card.diagramImage ? (
+            <img
+              className="card__diagram card__diagram--bitmap"
+              src={card.diagramImage.dataUrl}
+              alt={card.diagramImage.alt || `Diagram for ${card.displayTitle}`}
+            />
+          ) : (
+            <Diagram className="card__diagram" title={`Diagram for ${card.displayTitle}`} />
+          )}
         </figure>
       </div>
 

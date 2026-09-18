@@ -36,6 +36,12 @@ export interface CpcClassification {
   hierarchy: CpcLevel[];
 }
 
+/** Raster diagram supplied through the Studio, stored as a self-contained data URL. */
+export interface BitmapDiagram {
+  dataUrl: string;
+  alt: string;
+}
+
 export interface PatentCard {
   id: string;
   publicationNumber: string;
@@ -48,6 +54,8 @@ export interface PatentCard {
   diagramType: DiagramType;
   /** Key resolved to a React SVG component in src/diagrams/index.ts */
   diagramComponent: DiagramKey;
+  /** Takes precedence over diagramComponent when present. */
+  diagramImage?: BitmapDiagram;
   /** Internal-only provenance field. Never rendered in the device card view. */
   sourceReference: string;
   curationStatus: CurationStatus;
