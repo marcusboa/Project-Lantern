@@ -386,6 +386,10 @@ button {
   color: var(--colour-diagram-stroke);
 }
 
+.card__diagram--bitmap {
+  object-fit: contain;
+}
+
 .diagram__figure-label,
 .diagram__callout-label {
   font-family: var(--font-technical);
@@ -660,6 +664,130 @@ button {
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--colour-text-tertiary);
+}
+
+/* ---------- Studio ---------- */
+
+.studio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: var(--rule-width) solid var(--colour-rule);
+  max-height: 42vh;
+  overflow: auto;
+}
+
+.studio__header,
+.studio__header-actions,
+.studio__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.studio__header {
+  justify-content: space-between;
+}
+
+.studio__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+
+.studio__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.studio__field--wide {
+  grid-column: 1 / -1;
+}
+
+.studio__field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.studio__input {
+  padding: 5px 7px;
+  background: transparent;
+  border: var(--rule-width) solid var(--colour-rule);
+  color: var(--colour-text-primary);
+  font-family: var(--font-interface);
+  font-size: 12px;
+}
+
+.studio__input:disabled {
+  color: var(--colour-text-tertiary);
+  border-color: var(--colour-rule);
+}
+
+.studio__input--area {
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.studio__input--file {
+  padding: 4px;
+  font-family: var(--font-technical);
+  font-size: 10px;
+  color: var(--colour-text-secondary);
+}
+
+.studio__thumb {
+  width: 64px;
+  height: 44px;
+  object-fit: contain;
+  border: var(--rule-width) solid var(--colour-rule);
+}
+
+.studio__error,
+.studio__message {
+  font-family: var(--font-technical);
+  font-size: 11px;
+  letter-spacing: var(--tracking-technical);
+}
+
+.studio__error {
+  color: #e2a08a;
+}
+
+.studio__message {
+  color: var(--colour-text-secondary);
+}
+
+.studio__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.studio__list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: var(--rule-width) solid var(--colour-rule);
+}
+
+.studio__list-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--colour-text-secondary);
 }
 
 /* ---------- Debug inspector ---------- */

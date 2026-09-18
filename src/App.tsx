@@ -4,6 +4,8 @@ import { PatentCardView } from './components/PatentCardView';
 import { PatentControls } from './components/PatentControls';
 import { PatentCollectionOverview } from './components/PatentCollectionOverview';
 import { DebugInspector } from './components/DebugInspector';
+import { StudioPanel } from './components/StudioPanel';
+import { loadCustomCards, saveCustomCards } from './studio/customCards';
 import { patentCards } from './data/patentCards';
 import type { CurationStatus, PatentCard } from './types/patent';
 
@@ -28,6 +30,22 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+/** Applies the shuffled order (ids missing from it keep collection order) and the status filter. */
+function arrangeCards(
+  collection: PatentCard[],
+  order: string[],
+  statusFilter: CurationStatus | 'All',
+): PatentCard[] {
+  const ranked = new Map(order.map((id, position) => [id, position]));
+  const ordered = [...collection].sort(
+    (a, b) =>
+      (ranked.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (ranked.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+  );
+  return statusFilter === 'All'
+    ? ordered
+    : ordered.filter((card) => card.curationStatus === statusFilter);
+}
+
 export default function App() {
   const [statusFilter, setStatusFilter] = useState<CurationStatus | 'All'>('All');
   const [index, setIndex] = useState(0);
@@ -39,15 +57,15 @@ export default function App() {
   const [autoAdvance, setAutoAdvance] = useState(false);
   const [transitionKey, setTransitionKey] = useState(0);
   const [order, setOrder] = useState<string[]>(() => patentCards.map((card) => card.id));
+  const [studioOpen, setStudioOpen] = useState(false);
+  const [customCards, setCustomCards] = useState<PatentCard[]>(() => loadCustomCards());
 
-  const cards = useMemo(() => {
-    const ordered = order
-      .map((id) => patentCards.find((card) => card.id === id))
-      .filter((card): card is PatentCard => card !== undefined);
-    return statusFilter === 'All'
-      ? ordered
-      : ordered.filter((card) => card.curationStatus === statusFilter);
-  }, [order, statusFilter]);
+  const collection = useMemo(() => [...patentCards, ...customCards], [customCards]);
+
+  const cards = useMemo(
+    () => arrangeCards(collection, order, statusFilter),
+    [collection, order, statusFilter],
+  );
 
   const safeIndex = cards.length > 0 ? Math.min(index, cards.length - 1) : 0;
   const current = cards[safeIndex];
@@ -79,8 +97,8 @@ export default function App() {
   );
   const shuffle = useCallback(() => {
     setAutoAdvance(false);
-    setOrder((current) => {
-      const next = [...current];
+    setOrder(() => {
+      const next = collection.map((card) => card.id);
       for (let i = next.length - 1; i > 0; i -= 1) {
         const j = Math.floor(Math.random() * (i + 1));
         [next[i], next[j]] = [next[j], next[i]];
@@ -91,7 +109,46 @@ export default function App() {
     setReverse(false);
     setTransitionKey((value) => value + 1);
     setIndex(0);
-  }, []);
+  }, [collection]);
+
+  const saveCard = useCallback(
+    (card: PatentCard): string | null => {
+      const nextCards = customCards.some((entry) => entry.id === card.id)
+        ? customCards.map((entry) => (entry.id === card.id ? card : entry))
+        : [...customCards, card];
+      const result = saveCustomCards(nextCards);
+      if (!result.ok) return result.error;
+
+      // Reveal the saved card, dropping a filter that would hide it.
+      const nextFilter =
+        statusFilter === 'All' || statusFilter === card.curationStatus ? statusFilter : 'All';
+      const target = arrangeCards([...patentCards, ...nextCards], order, nextFilter).findIndex(
+        (entry) => entry.id === card.id,
+      );
+      setCustomCards(nextCards);
+      setStatusFilter(nextFilter);
+      setAutoAdvance(false);
+      setOutgoing(null);
+      if (target !== -1) {
+        setIndex(target);
+        setTransitionKey((value) => value + 1);
+      }
+      return null;
+    },
+    [customCards, order, statusFilter],
+  );
+
+  const deleteCard = useCallback(
+    (id: string) => {
+      const nextCards = customCards.filter((entry) => entry.id !== id);
+      const result = saveCustomCards(nextCards);
+      if (!result.ok) return;
+      setCustomCards(nextCards);
+      setOrder((current) => current.filter((entry) => entry !== id));
+      setOutgoing(null);
+    },
+    [customCards],
+  );
 
   useEffect(() => {
     if (!outgoing) return;
@@ -124,14 +181,18 @@ export default function App() {
         setPresentation((value) => !value);
       } else if (event.key === 'Escape') {
         if (overviewOpen) setOverviewOpen(false);
+        else if (studioOpen) setStudioOpen(false);
         else setPresentation(false);
       } else if (event.key === 'o' || event.key === 'O') {
         setOverviewOpen((value) => !value);
+      } else if (event.key === 's' || event.key === 'S') {
+        setStudioOpen((value) => !value);
+        setPresentation(false);
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [next, previous, overviewOpen]);
+  }, [next, previous, overviewOpen, studioOpen]);
 
   return (
     <main className={presentation ? 'workspace workspace--presentation' : 'workspace'}>
@@ -185,6 +246,17 @@ export default function App() {
               aria-pressed={autoAdvance}
             >
               Auto-advance
+            </button>
+            <button
+              type="button"
+              className="chrome-button"
+              onClick={() => {
+                setStudioOpen((value) => !value);
+                setAutoAdvance(false);
+              }}
+              aria-pressed={studioOpen}
+            >
+              Studio (S)
             </button>
             <button
               type="button"
@@ -263,6 +335,15 @@ export default function App() {
           />
         ) : null}
       </DeviceFrame>
+
+      {!presentation && studioOpen ? (
+        <StudioPanel
+          cards={customCards}
+          onSave={saveCard}
+          onDelete={deleteCard}
+          onClose={() => setStudioOpen(false)}
+        />
+      ) : null}
 
       {!presentation && inspectorOpen && current ? <DebugInspector card={current} /> : null}
     </main>
