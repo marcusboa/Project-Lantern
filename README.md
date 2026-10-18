@@ -4,20 +4,34 @@ A curated, museum-label style display for patent cards. The primary experience i
 800 × 480 "device canvas" (a stand-in for a future 5-inch desktop display); the browser adds a
 neutral workspace, a preview label, and development-only controls around it.
 
-All content is fictional mock data. There is no backend, no network access, no authentication,
-and no patent scraping — the data layer is a single TypeScript array that can later be replaced
-with records from an internal system.
+The shipped content is fictional mock data, a single TypeScript array that can later be replaced
+with records from an internal system. Cards authored in the Studio are saved by a small local card
+server (Node + SQLite). There is no authentication, no external network access, and no patent
+scraping.
 
 ## Run locally
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # http://localhost:5173 — app and card API together
 ```
 
-Other scripts: `npm run build`, `npm run preview`, `npm run lint`, `npm run typecheck`.
+For the device (or any long-running install), build once and serve the app and card API from a
+single process:
 
-Requires Node 20.19+ or 22.12+ (Vite 7).
+```bash
+npm run build
+npm start        # http://127.0.0.1:8787
+```
+
+`npm start` listens on `127.0.0.1` by default. Set `HOST=0.0.0.0` to reach it from other machines
+on the network — the card API has no authentication, so only do this on a trusted network. `PORT`
+changes the port.
+
+Other scripts: `npm run preview`, `npm run lint`, `npm run typecheck`.
+
+Requires Node 20.19+ or 22.12+ (Vite 7). `better-sqlite3` is a native module built for the Node
+version that ran `npm install`; rerun `npm install` after switching Node versions.
 
 ## Interaction
 
@@ -42,11 +56,16 @@ src/
   components/     DeviceFrame, PatentCardView, PatentControls,
                   PatentCollectionOverview, DebugInspector, StudioPanel
   data/           patentCards.ts — the 10 mock records
-  studio/         customCards.ts (localStorage store), diagramImage.ts (bitmap intake)
+  studio/         cardSchema.ts (shared validation), cardStore.ts (card API client),
+                  diagramImage.ts (bitmap intake)
   diagrams/       one SVG component per invention + shared primitives + registry
   styles/         theme.css (design tokens), app.css (layout)
   types/          patent.ts — the PatentCard model
   App.tsx         carousel state, workspace chrome, keyboard shortcuts
+server/
+  cardStore.ts    SQLite card table + diagram files
+  cardApi.ts      /api routes (mounted by the Vite dev server and by server/index.ts)
+  index.ts        production server: dist/ + /api on one port
 ```
 
 - `DeviceFrame` renders a fixed 800 × 480 box and scales it uniformly to fit its container, so
@@ -114,15 +133,30 @@ date, applicant, inventor, description, CPC code and hierarchy (one `symbol | ti
 rung), tags, curation status, featured flag, and the internal-only `sourceReference`.
 
 A diagram can be either one of the built-in line drawings or a bitmap uploaded from disk. Uploads
-are downscaled to a 900 px long edge and stored inline as a data URL, so a card stays
-self-contained and the device never fetches anything at runtime; PNG and GIF sources keep their
-alpha channel, everything else is re-encoded as JPEG. A bitmap takes precedence over the selected
-line diagram.
+are downscaled in the browser to a 900 px long edge (PNG and GIF keep their alpha channel,
+everything else is re-encoded as JPEG) and sent with the card; the server writes the image to a
+file and the card then references it by URL. A bitmap takes precedence over the selected line
+diagram.
 
-Studio cards persist in `localStorage` under `patent-infotainment.studio.cards.v1` and are read
-back through `loadCustomCards()`, which drops malformed entries rather than throwing. Replacing
-that module with a fetch-backed store is the only change needed to persist them elsewhere; the
-card UI is unaware of where a record came from.
+### Where Studio cards are stored
+
+Cards are saved on the card server, not in the browser, so every browser pointed at the same
+server sees and edits the same cards, and they survive clearing browser data.
+
+| Path | Contents |
+| --- | --- |
+| `data/lantern.db` | SQLite database, one row per card (the card as JSON + timestamps) |
+| `data/images/` | Uploaded diagrams, referenced from cards as `/api/images/<file>` |
+
+`data/` is git-ignored; set `LANTERN_DATA_DIR` to keep it elsewhere. Back up the folder to back up
+every authored card. Replacing or deleting a card's image removes the old file.
+
+API (mounted at `/api`): `GET /cards`, `PUT /cards/:id` (create or replace), `DELETE /cards/:id`,
+`GET /images/:file`. Both the server and the browser validate cards with `parseCard()` in
+`src/studio/cardSchema.ts`, which coerces malformed fields to defaults rather than throwing.
+
+Cards saved in a browser's `localStorage` by earlier Studio builds are uploaded to the server the
+first time that browser opens the app, then removed from the browser.
 
 ## How diagrams are selected
 

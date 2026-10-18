@@ -1,10 +1,6 @@
 import { useState } from 'react';
-import {
-  CURATION_STATUSES,
-  DIAGRAM_KEYS,
-  DIAGRAM_TYPES,
-  createCardId,
-} from '../studio/customCards';
+import { CURATION_STATUSES, DIAGRAM_KEYS, DIAGRAM_TYPES } from '../studio/cardSchema';
+import { createCardId, type SaveResult } from '../studio/cardStore';
 import { readDiagramImage } from '../studio/diagramImage';
 import type {
   BitmapDiagram,
@@ -17,8 +13,10 @@ import type {
 interface StudioPanelProps {
   /** Studio-authored cards only; the mock collection is not editable here. */
   cards: PatentCard[];
-  onSave: (card: PatentCard) => string | null;
-  onDelete: (id: string) => void;
+  /** Set when the card server could not be reached or read. */
+  storeError: string | null;
+  onSave: (card: PatentCard) => Promise<SaveResult>;
+  onDelete: (id: string) => Promise<string | null>;
   onClose: () => void;
 }
 
@@ -127,10 +125,11 @@ function toCard(form: StudioForm): PatentCard {
   };
 }
 
-export function StudioPanel({ cards, onSave, onDelete, onClose }: StudioPanelProps) {
+export function StudioPanel({ cards, storeError, onSave, onDelete, onClose }: StudioPanelProps) {
   const [form, setForm] = useState<StudioForm>(emptyForm);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const update = <K extends keyof StudioForm>(key: K, value: StudioForm[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -148,21 +147,31 @@ export function StudioPanel({ cards, onSave, onDelete, onClose }: StudioPanelPro
     }
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (form.displayTitle.trim() === '') {
       setError('A title is required.');
       return;
     }
-    const card = toCard(form);
-    const failure = onSave(card);
-    if (failure !== null) {
-      setError(failure);
+    setBusy(true);
+    const result = await onSave(toCard(form));
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     setError(null);
     setMessage(form.id === null ? 'Card added to the collection.' : 'Card updated.');
-    setForm(toForm(card));
+    setForm(toForm(result.card));
+  };
+
+  const handleDelete = async (id: string) => {
+    setBusy(true);
+    const failure = await onDelete(id);
+    setBusy(false);
+    setError(failure);
+    setMessage(failure === null ? 'Card deleted.' : null);
+    if (failure === null && form.id === id) setForm(emptyForm);
   };
 
   return (
@@ -187,7 +196,9 @@ export function StudioPanel({ cards, onSave, onDelete, onClose }: StudioPanelPro
         </div>
       </header>
 
-      <form className="studio__form" onSubmit={handleSubmit}>
+      {storeError !== null ? <p className="studio__error">{storeError}</p> : null}
+
+      <form className="studio__form" onSubmit={(event) => void handleSubmit(event)}>
         <div className="studio__grid">
           <label className="studio__field">
             <span className="label">Title</span>
@@ -373,7 +384,7 @@ export function StudioPanel({ cards, onSave, onDelete, onClose }: StudioPanelPro
           </label>
           {form.diagramImage ? (
             <div className="studio__field studio__field--inline">
-              <img className="studio__thumb" src={form.diagramImage.dataUrl} alt="" />
+              <img className="studio__thumb" src={form.diagramImage.src} alt="" />
               <button
                 type="button"
                 className="chrome-button"
@@ -386,8 +397,8 @@ export function StudioPanel({ cards, onSave, onDelete, onClose }: StudioPanelPro
         </div>
 
         <div className="studio__actions">
-          <button type="submit" className="chrome-button">
-            {form.id === null ? 'Add card' : 'Save changes'}
+          <button type="submit" className="chrome-button" disabled={busy}>
+            {busy ? 'Saving…' : form.id === null ? 'Add card' : 'Save changes'}
           </button>
           {error !== null ? <span className="studio__error">{error}</span> : null}
           {message !== null ? <span className="studio__message">{message}</span> : null}
@@ -414,10 +425,8 @@ export function StudioPanel({ cards, onSave, onDelete, onClose }: StudioPanelPro
               <button
                 type="button"
                 className="chrome-button"
-                onClick={() => {
-                  onDelete(card.id);
-                  if (form.id === card.id) setForm(emptyForm);
-                }}
+                disabled={busy}
+                onClick={() => void handleDelete(card.id)}
               >
                 Delete
               </button>

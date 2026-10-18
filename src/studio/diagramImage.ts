@@ -23,8 +23,8 @@ function readAsDataUrl(file: File): Promise<string> {
 }
 
 /**
- * Reads a bitmap from disk and downscales it so the whole card — image included —
- * still fits in localStorage. Transparency is preserved by keeping PNG sources as PNG.
+ * Reads a bitmap from disk and downscales it to what the device can show, keeping uploads to the
+ * card server small. Transparency is preserved by keeping PNG sources as PNG.
  */
 export async function readDiagramImage(file: File): Promise<BitmapDiagram> {
   if (!file.type.startsWith('image/')) {
@@ -49,5 +49,5 @@ export async function readDiagramImage(file: File): Promise<BitmapDiagram> {
     throw new Error('That image is too large to store — try one under roughly 1 megapixel.');
   }
 
-  return { dataUrl, alt: '' };
+  return { src: dataUrl, alt: '' };
 }

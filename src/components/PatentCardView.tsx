@@ -124,7 +124,7 @@ export function PatentCardView({ card, position, total, phase, reverse }: Patent
           {card.diagramImage ? (
             <img
               className="card__diagram card__diagram--bitmap"
-              src={card.diagramImage.dataUrl}
+              src={card.diagramImage.src}
               alt={card.diagramImage.alt || `Diagram for ${card.displayTitle}`}
             />
           ) : (
