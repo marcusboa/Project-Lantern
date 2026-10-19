@@ -38,7 +38,8 @@ export interface CpcClassification {
 
 /** Raster diagram supplied through the Studio, stored as a self-contained data URL. */
 export interface BitmapDiagram {
-  dataUrl: string;
+  /** Inline data URL while being authored; a server URL once saved. */
+  src: string;
   alt: string;
 }
 

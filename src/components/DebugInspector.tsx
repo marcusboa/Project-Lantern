@@ -15,12 +15,12 @@ export function DebugInspector({ card }: DebugInspectorProps) {
       </div>
       <pre className="inspector__json">
         {JSON.stringify(
-          card.diagramImage
+          card.diagramImage && card.diagramImage.src.length > 120
             ? {
                 ...card,
                 diagramImage: {
                   ...card.diagramImage,
-                  dataUrl: `${card.diagramImage.dataUrl.slice(0, 48)}… (${card.diagramImage.dataUrl.length} chars)`,
+                  src: `${card.diagramImage.src.slice(0, 48)}… (${card.diagramImage.src.length} chars)`,
                 },
               }
             : card,

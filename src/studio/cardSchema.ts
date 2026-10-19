@@ -1,11 +1,9 @@
-import { diagramRegistry } from '../diagrams';
 import type { CurationStatus, DiagramKey, DiagramType, PatentCard } from '../types/patent';
 
 /**
- * Studio cards live in localStorage only — the device has no backend. Swapping this
- * module for a fetch-backed store is the single change needed to persist elsewhere.
+ * Validation shared by the browser and the card server. Kept free of React and DOM imports so
+ * the server can load it directly.
  */
-const STORAGE_KEY = 'patent-infotainment.studio.cards.v1';
 
 export const CURATION_STATUSES: CurationStatus[] = [
   'Curated',
@@ -22,9 +20,27 @@ export const DIAGRAM_TYPES: DiagramType[] = [
   'exploded',
 ];
 
-export const DIAGRAM_KEYS = Object.keys(diagramRegistry) as DiagramKey[];
+const DIAGRAM_KEY_SET: Record<DiagramKey, true> = {
+  umbrella: true,
+  pencil: true,
+  bicycle: true,
+  coffee: true,
+  marine: true,
+  computing: true,
+  agriculture: true,
+  audio: true,
+  appliance: true,
+  spacecraft: true,
+};
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export const DIAGRAM_KEYS = Object.keys(DIAGRAM_KEY_SET) as DiagramKey[];
+
+/** Path prefix under which the card server publishes stored diagram files. */
+export const IMAGE_ROUTE = '/api/images/';
+export const IMAGE_FILE_PATTERN = /^[A-Za-z0-9-]+\.(png|jpg|gif|webp)$/;
+export const CARD_ID_PATTERN = /^[A-Za-z0-9_-]{1,80}$/;
+
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
@@ -32,11 +48,20 @@ function asString(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback;
 }
 
-function parseCard(value: unknown): PatentCard | null {
+/** A diagram source is either a freshly uploaded data URL or a file already stored on the server. */
+export function isDiagramSource(src: string): boolean {
+  return (
+    src.startsWith('data:image/') ||
+    (src.startsWith(IMAGE_ROUTE) && IMAGE_FILE_PATTERN.test(src.slice(IMAGE_ROUTE.length)))
+  );
+}
+
+/** Coerces untrusted input into a PatentCard, or returns null when it has no id or title. */
+export function parseCard(value: unknown): PatentCard | null {
   if (!isRecord(value)) return null;
   const id = asString(value.id);
-  const displayTitle = asString(value.displayTitle);
-  if (id === '' || displayTitle === '') return null;
+  const displayTitle = asString(value.displayTitle).trim();
+  if (!CARD_ID_PATTERN.test(id) || displayTitle === '') return null;
 
   const cpcSource = isRecord(value.cpc) ? value.cpc : {};
   const hierarchySource = Array.isArray(cpcSource.hierarchy) ? cpcSource.hierarchy : [];
@@ -44,7 +69,7 @@ function parseCard(value: unknown): PatentCard | null {
   const diagramType = asString(value.diagramType) as DiagramType;
   const status = asString(value.curationStatus) as CurationStatus;
   const imageSource = isRecord(value.diagramImage) ? value.diagramImage : null;
-  const dataUrl = imageSource ? asString(imageSource.dataUrl) : '';
+  const src = imageSource ? asString(imageSource.src) : '';
 
   return {
     id,
@@ -62,39 +87,10 @@ function parseCard(value: unknown): PatentCard | null {
     },
     diagramType: DIAGRAM_TYPES.includes(diagramType) ? diagramType : 'schematic',
     diagramComponent: DIAGRAM_KEYS.includes(diagramKey) ? diagramKey : DIAGRAM_KEYS[0],
-    ...(dataUrl.startsWith('data:image/')
-      ? { diagramImage: { dataUrl, alt: asString(imageSource?.alt) } }
-      : {}),
+    ...(isDiagramSource(src) ? { diagramImage: { src, alt: asString(imageSource?.alt) } } : {}),
     sourceReference: asString(value.sourceReference),
     curationStatus: CURATION_STATUSES.includes(status) ? status : 'Draft',
     tags: Array.isArray(value.tags) ? value.tags.filter((tag) => typeof tag === 'string') : [],
     featured: value.featured === true,
   };
-}
-
-export function loadCustomCards(): PatentCard[] {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw === null) return [];
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.flatMap((entry) => parseCard(entry) ?? []) : [];
-  } catch {
-    return [];
-  }
-}
-
-export function saveCustomCards(cards: PatentCard[]): { ok: true } | { ok: false; error: string } {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
-    return { ok: true };
-  } catch {
-    return {
-      ok: false,
-      error: 'Browser storage is full — remove a Studio card or use a smaller diagram image.',
-    };
-  }
-}
-
-export function createCardId(): string {
-  return `studio-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e4).toString(36)}`;
 }

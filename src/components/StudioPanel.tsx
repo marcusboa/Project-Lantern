@@ -1,10 +1,6 @@
 import { useState } from 'react';
-import {
-  CURATION_STATUSES,
-  DIAGRAM_KEYS,
-  DIAGRAM_TYPES,
-  createCardId,
-} from '../studio/customCards';
+import { CURATION_STATUSES, DIAGRAM_KEYS, DIAGRAM_TYPES } from '../studio/cardSchema';
+import { createCardId, type SaveResult } from '../studio/cardStore';
 import { readDiagramImage } from '../studio/diagramImage';
 import type {
   BitmapDiagram,
@@ -17,8 +13,10 @@ import type {
 interface StudioPanelProps {
   /** Studio-authored cards only; the mock collection is not editable here. */
   cards: PatentCard[];
-  onSave: (card: PatentCard) => string | null;
-  onDelete: (id: string) => void;
+  /** Set when the card server could not be reached or read. */
+  storeError: string | null;
+  onSave: (card: PatentCard) => Promise<SaveResult>;
+  onDelete: (id: string) => Promise<string | null>;
   onClose: () => void;
 }
 
@@ -127,10 +125,11 @@ function toCard(form: StudioForm): PatentCard {
   };
 }
 
-export function StudioPanel({ cards, onSave, onDelete, onClose }: StudioPanelProps) {
+export function StudioPanel({ cards, storeError, onSave, onDelete, onClose }: StudioPanelProps) {
   const [form, setForm] = useState<StudioForm>(emptyForm);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const update = <K extends keyof StudioForm>(key: K, value: StudioForm[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -148,21 +147,31 @@ export function StudioPanel({ cards, onSave, onDelete, onClose }: StudioPanelPro
     }
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (form.displayTitle.trim() === '') {
       setError('A title is required.');
       return;
     }
-    const card = toCard(form);
-    const failure = onSave(card);
-    if (failure !== null) {
-      setError(failure);
+    setBusy(true);
+    const result = await onSave(toCard(form));
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
     setError(null);
     setMessage(form.id === null ? 'Card added to the collection.' : 'Card updated.');
-    setForm(toForm(card));
+    setForm(toForm(result.card));
+  };
+
+  const handleDelete = async (id: string) => {
+    setBusy(true);
+    const failure = await onDelete(id);
+    setBusy(false);
+    setError(failure);
+    setMessage(failure === null ? 'Card deleted.' : null);
+    if (failure === null && form.id === id) setForm(emptyForm);
   };
 
   return (
@@ -173,6 +182,7 @@ export function StudioPanel({ cards, onSave, onDelete, onClose }: StudioPanelPro
           <button
             type="button"
             className="chrome-button"
+            disabled={busy}
             onClick={() => {
               setForm(emptyForm);
               setError(null);
@@ -187,207 +197,211 @@ export function StudioPanel({ cards, onSave, onDelete, onClose }: StudioPanelPro
         </div>
       </header>
 
-      <form className="studio__form" onSubmit={handleSubmit}>
-        <div className="studio__grid">
-          <label className="studio__field">
-            <span className="label">Title</span>
-            <input
-              className="studio__input"
-              name="displayTitle"
-              value={form.displayTitle}
-              onChange={(event) => update('displayTitle', event.target.value)}
-              required
-            />
-          </label>
-          <label className="studio__field">
-            <span className="label">Publication number</span>
-            <input
-              className="studio__input"
-              name="publicationNumber"
-              value={form.publicationNumber}
-              placeholder="US 20XX/0000011 A1"
-              onChange={(event) => update('publicationNumber', event.target.value)}
-            />
-          </label>
-          <label className="studio__field">
-            <span className="label">Publication date</span>
-            <input
-              className="studio__input"
-              name="publicationDate"
-              value={form.publicationDate}
-              placeholder="2024-05-09"
-              onChange={(event) => update('publicationDate', event.target.value)}
-            />
-          </label>
-          <label className="studio__field">
-            <span className="label">Applicant</span>
-            <input
-              className="studio__input"
-              name="applicant"
-              value={form.applicant}
-              onChange={(event) => update('applicant', event.target.value)}
-            />
-          </label>
-          <label className="studio__field">
-            <span className="label">Inventor</span>
-            <input
-              className="studio__input"
-              name="inventor"
-              value={form.inventor}
-              onChange={(event) => update('inventor', event.target.value)}
-            />
-          </label>
-          <label className="studio__field">
-            <span className="label">Tags (comma separated)</span>
-            <input
-              className="studio__input"
-              name="tags"
-              value={form.tags}
-              placeholder="Mechanical, Consumer"
-              onChange={(event) => update('tags', event.target.value)}
-            />
-          </label>
-          <label className="studio__field studio__field--wide">
-            <span className="label">Plain-language description</span>
-            <textarea
-              className="studio__input studio__input--area"
-              name="plainLanguageDescription"
-              rows={3}
-              value={form.plainLanguageDescription}
-              onChange={(event) => update('plainLanguageDescription', event.target.value)}
-            />
-          </label>
-          <label className="studio__field">
-            <span className="label">CPC code</span>
-            <input
-              className="studio__input"
-              name="cpcCode"
-              value={form.cpcCode}
-              placeholder="G06N 3/006"
-              onChange={(event) => update('cpcCode', event.target.value)}
-            />
-          </label>
-          <label className="studio__field">
-            <span className="label">Curation status</span>
-            <select
-              className="studio__input"
-              name="curationStatus"
-              value={form.curationStatus}
-              onChange={(event) => update('curationStatus', event.target.value as CurationStatus)}
-            >
-              {CURATION_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="studio__field studio__field--wide">
-            <span className="label">CPC hierarchy — one “symbol | title” per line, coarsest first</span>
-            <textarea
-              className="studio__input studio__input--area"
-              name="cpcHierarchy"
-              rows={4}
-              value={form.cpcHierarchy}
-              placeholder={HIERARCHY_PLACEHOLDER}
-              onChange={(event) => update('cpcHierarchy', event.target.value)}
-            />
-          </label>
-          <label className="studio__field">
-            <span className="label">Diagram type</span>
-            <select
-              className="studio__input"
-              name="diagramType"
-              value={form.diagramType}
-              onChange={(event) => update('diagramType', event.target.value as DiagramType)}
-            >
-              {DIAGRAM_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="studio__field">
-            <span className="label">Fallback line diagram</span>
-            <select
-              className="studio__input"
-              name="diagramComponent"
-              value={form.diagramComponent}
-              disabled={form.diagramImage !== null}
-              onChange={(event) => update('diagramComponent', event.target.value as DiagramKey)}
-            >
-              {DIAGRAM_KEYS.map((key) => (
-                <option key={key} value={key}>
-                  {key}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="studio__field">
-            <span className="label">Bitmap diagram</span>
-            <input
-              className="studio__input studio__input--file"
-              name="diagramImage"
-              type="file"
-              accept="image/*"
-              onChange={(event) => {
-                void handleImage(event.target.files?.[0]);
-                event.target.value = '';
-              }}
-            />
-          </label>
-          <label className="studio__field">
-            <span className="label">Diagram alt text</span>
-            <input
-              className="studio__input"
-              name="diagramAlt"
-              value={form.diagramImage?.alt ?? ''}
-              disabled={form.diagramImage === null}
-              onChange={(event) =>
-                update(
-                  'diagramImage',
-                  form.diagramImage ? { ...form.diagramImage, alt: event.target.value } : null,
-                )
-              }
-            />
-          </label>
-          <label className="studio__field">
-            <span className="label">Internal source reference</span>
-            <input
-              className="studio__input"
-              name="sourceReference"
-              value={form.sourceReference}
-              placeholder="internal://archive/…"
-              onChange={(event) => update('sourceReference', event.target.value)}
-            />
-          </label>
-          <label className="studio__field studio__field--inline">
-            <input
-              type="checkbox"
-              name="featured"
-              checked={form.featured}
-              onChange={(event) => update('featured', event.target.checked)}
-            />
-            <span className="label">Featured</span>
-          </label>
-          {form.diagramImage ? (
-            <div className="studio__field studio__field--inline">
-              <img className="studio__thumb" src={form.diagramImage.dataUrl} alt="" />
-              <button
-                type="button"
-                className="chrome-button"
-                onClick={() => update('diagramImage', null)}
+      {storeError !== null ? <p className="studio__error">{storeError}</p> : null}
+
+      <form className="studio__form" onSubmit={(event) => void handleSubmit(event)}>
+        <fieldset className="studio__fieldset" disabled={busy}>
+          <div className="studio__grid">
+            <label className="studio__field">
+              <span className="label">Title</span>
+              <input
+                className="studio__input"
+                name="displayTitle"
+                value={form.displayTitle}
+                onChange={(event) => update('displayTitle', event.target.value)}
+                required
+              />
+            </label>
+            <label className="studio__field">
+              <span className="label">Publication number</span>
+              <input
+                className="studio__input"
+                name="publicationNumber"
+                value={form.publicationNumber}
+                placeholder="US 20XX/0000011 A1"
+                onChange={(event) => update('publicationNumber', event.target.value)}
+              />
+            </label>
+            <label className="studio__field">
+              <span className="label">Publication date</span>
+              <input
+                className="studio__input"
+                name="publicationDate"
+                value={form.publicationDate}
+                placeholder="2024-05-09"
+                onChange={(event) => update('publicationDate', event.target.value)}
+              />
+            </label>
+            <label className="studio__field">
+              <span className="label">Applicant</span>
+              <input
+                className="studio__input"
+                name="applicant"
+                value={form.applicant}
+                onChange={(event) => update('applicant', event.target.value)}
+              />
+            </label>
+            <label className="studio__field">
+              <span className="label">Inventor</span>
+              <input
+                className="studio__input"
+                name="inventor"
+                value={form.inventor}
+                onChange={(event) => update('inventor', event.target.value)}
+              />
+            </label>
+            <label className="studio__field">
+              <span className="label">Tags (comma separated)</span>
+              <input
+                className="studio__input"
+                name="tags"
+                value={form.tags}
+                placeholder="Mechanical, Consumer"
+                onChange={(event) => update('tags', event.target.value)}
+              />
+            </label>
+            <label className="studio__field studio__field--wide">
+              <span className="label">Plain-language description</span>
+              <textarea
+                className="studio__input studio__input--area"
+                name="plainLanguageDescription"
+                rows={3}
+                value={form.plainLanguageDescription}
+                onChange={(event) => update('plainLanguageDescription', event.target.value)}
+              />
+            </label>
+            <label className="studio__field">
+              <span className="label">CPC code</span>
+              <input
+                className="studio__input"
+                name="cpcCode"
+                value={form.cpcCode}
+                placeholder="G06N 3/006"
+                onChange={(event) => update('cpcCode', event.target.value)}
+              />
+            </label>
+            <label className="studio__field">
+              <span className="label">Curation status</span>
+              <select
+                className="studio__input"
+                name="curationStatus"
+                value={form.curationStatus}
+                onChange={(event) => update('curationStatus', event.target.value as CurationStatus)}
               >
-                Remove image
-              </button>
-            </div>
-          ) : null}
-        </div>
+                {CURATION_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="studio__field studio__field--wide">
+              <span className="label">CPC hierarchy — one “symbol | title” per line, coarsest first</span>
+              <textarea
+                className="studio__input studio__input--area"
+                name="cpcHierarchy"
+                rows={4}
+                value={form.cpcHierarchy}
+                placeholder={HIERARCHY_PLACEHOLDER}
+                onChange={(event) => update('cpcHierarchy', event.target.value)}
+              />
+            </label>
+            <label className="studio__field">
+              <span className="label">Diagram type</span>
+              <select
+                className="studio__input"
+                name="diagramType"
+                value={form.diagramType}
+                onChange={(event) => update('diagramType', event.target.value as DiagramType)}
+              >
+                {DIAGRAM_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="studio__field">
+              <span className="label">Fallback line diagram</span>
+              <select
+                className="studio__input"
+                name="diagramComponent"
+                value={form.diagramComponent}
+                disabled={form.diagramImage !== null}
+                onChange={(event) => update('diagramComponent', event.target.value as DiagramKey)}
+              >
+                {DIAGRAM_KEYS.map((key) => (
+                  <option key={key} value={key}>
+                    {key}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="studio__field">
+              <span className="label">Bitmap diagram</span>
+              <input
+                className="studio__input studio__input--file"
+                name="diagramImage"
+                type="file"
+                accept="image/*"
+                onChange={(event) => {
+                  void handleImage(event.target.files?.[0]);
+                  event.target.value = '';
+                }}
+              />
+            </label>
+            <label className="studio__field">
+              <span className="label">Diagram alt text</span>
+              <input
+                className="studio__input"
+                name="diagramAlt"
+                value={form.diagramImage?.alt ?? ''}
+                disabled={form.diagramImage === null}
+                onChange={(event) =>
+                  update(
+                    'diagramImage',
+                    form.diagramImage ? { ...form.diagramImage, alt: event.target.value } : null,
+                  )
+                }
+              />
+            </label>
+            <label className="studio__field">
+              <span className="label">Internal source reference</span>
+              <input
+                className="studio__input"
+                name="sourceReference"
+                value={form.sourceReference}
+                placeholder="internal://archive/…"
+                onChange={(event) => update('sourceReference', event.target.value)}
+              />
+            </label>
+            <label className="studio__field studio__field--inline">
+              <input
+                type="checkbox"
+                name="featured"
+                checked={form.featured}
+                onChange={(event) => update('featured', event.target.checked)}
+              />
+              <span className="label">Featured</span>
+            </label>
+            {form.diagramImage ? (
+              <div className="studio__field studio__field--inline">
+                <img className="studio__thumb" src={form.diagramImage.src} alt="" />
+                <button
+                  type="button"
+                  className="chrome-button"
+                  onClick={() => update('diagramImage', null)}
+                >
+                  Remove image
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </fieldset>
 
         <div className="studio__actions">
-          <button type="submit" className="chrome-button">
-            {form.id === null ? 'Add card' : 'Save changes'}
+          <button type="submit" className="chrome-button" disabled={busy}>
+            {busy ? 'Saving…' : form.id === null ? 'Add card' : 'Save changes'}
           </button>
           {error !== null ? <span className="studio__error">{error}</span> : null}
           {message !== null ? <span className="studio__message">{message}</span> : null}
@@ -403,6 +417,7 @@ export function StudioPanel({ cards, onSave, onDelete, onClose }: StudioPanelPro
                 type="button"
                 className="chrome-button"
                 aria-pressed={form.id === card.id}
+                disabled={busy}
                 onClick={() => {
                   setForm(toForm(card));
                   setError(null);
@@ -414,10 +429,8 @@ export function StudioPanel({ cards, onSave, onDelete, onClose }: StudioPanelPro
               <button
                 type="button"
                 className="chrome-button"
-                onClick={() => {
-                  onDelete(card.id);
-                  if (form.id === card.id) setForm(emptyForm);
-                }}
+                disabled={busy}
+                onClick={() => void handleDelete(card.id)}
               >
                 Delete
               </button>

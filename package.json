@@ -6,16 +6,22 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "start": "tsx server/index.ts",
     "lint": "eslint .",
     "typecheck": "tsc -b --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {
+    "better-sqlite3": "^12.11.1",
+    "express": "^5.2.1",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "tsx": "^4.23.14"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^5.0.6",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",

@@ -5,7 +5,14 @@ import { PatentControls } from './components/PatentControls';
 import { PatentCollectionOverview } from './components/PatentCollectionOverview';
 import { DebugInspector } from './components/DebugInspector';
 import { StudioPanel } from './components/StudioPanel';
-import { loadCustomCards, saveCustomCards } from './studio/customCards';
+import {
+  errorMessage,
+  fetchCards,
+  importLegacyCards,
+  putCard,
+  removeCard,
+  type SaveResult,
+} from './studio/cardStore';
 import { patentCards } from './data/patentCards';
 import type { CurationStatus, PatentCard } from './types/patent';
 
@@ -58,7 +65,8 @@ export default function App() {
   const [transitionKey, setTransitionKey] = useState(0);
   const [order, setOrder] = useState<string[]>(() => patentCards.map((card) => card.id));
   const [studioOpen, setStudioOpen] = useState(false);
-  const [customCards, setCustomCards] = useState<PatentCard[]>(() => loadCustomCards());
+  const [customCards, setCustomCards] = useState<PatentCard[]>([]);
+  const [storeError, setStoreError] = useState<string | null>(null);
 
   const collection = useMemo(() => [...patentCards, ...customCards], [customCards]);
 
@@ -111,13 +119,36 @@ export default function App() {
     setIndex(0);
   }, [collection]);
 
+  useEffect(() => {
+    let cancelled = false;
+    importLegacyCards()
+      .then(fetchCards)
+      .then(
+        (cards) => {
+          if (cancelled) return;
+          setCustomCards(cards);
+          setStoreError(null);
+        },
+        (cause: unknown) => {
+          if (!cancelled) setStoreError(errorMessage(cause));
+        },
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const saveCard = useCallback(
-    (card: PatentCard): string | null => {
+    async (draft: PatentCard): Promise<SaveResult> => {
+      let card: PatentCard;
+      try {
+        card = await putCard(draft);
+      } catch (cause) {
+        return { ok: false, error: errorMessage(cause) };
+      }
       const nextCards = customCards.some((entry) => entry.id === card.id)
         ? customCards.map((entry) => (entry.id === card.id ? card : entry))
         : [...customCards, card];
-      const result = saveCustomCards(nextCards);
-      if (!result.ok) return result.error;
 
       // Reveal the saved card, dropping a filter that would hide it.
       const nextFilter =
@@ -133,21 +164,24 @@ export default function App() {
         setIndex(target);
         setTransitionKey((value) => value + 1);
       }
-      return null;
+      return { ok: true, card };
     },
     [customCards, order, statusFilter],
   );
 
   const deleteCard = useCallback(
-    (id: string) => {
-      const nextCards = customCards.filter((entry) => entry.id !== id);
-      const result = saveCustomCards(nextCards);
-      if (!result.ok) return;
-      setCustomCards(nextCards);
+    async (id: string): Promise<string | null> => {
+      try {
+        await removeCard(id);
+      } catch (cause) {
+        return errorMessage(cause);
+      }
+      setCustomCards((current) => current.filter((entry) => entry.id !== id));
       setOrder((current) => current.filter((entry) => entry !== id));
       setOutgoing(null);
+      return null;
     },
-    [customCards],
+    [],
   );
 
   useEffect(() => {
@@ -339,6 +373,7 @@ export default function App() {
       {!presentation && studioOpen ? (
         <StudioPanel
           cards={customCards}
+          storeError={storeError}
           onSave={saveCard}
           onDelete={deleteCard}
           onClose={() => setStudioOpen(false)}
