@@ -691,6 +691,13 @@ button {
   justify-content: space-between;
 }
 
+.studio__fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 .studio__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
