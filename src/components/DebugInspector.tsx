@@ -13,7 +13,21 @@ export function DebugInspector({ card }: DebugInspectorProps) {
         <span className="inspector__source">sourceReference: {card.sourceReference}</span>
         <span>featured: {String(card.featured)}</span>
       </div>
-      <pre className="inspector__json">{JSON.stringify(card, null, 2)}</pre>
+      <pre className="inspector__json">
+        {JSON.stringify(
+          card.diagramImage
+            ? {
+                ...card,
+                diagramImage: {
+                  ...card.diagramImage,
+                  dataUrl: `${card.diagramImage.dataUrl.slice(0, 48)}… (${card.diagramImage.dataUrl.length} chars)`,
+                },
+              }
+            : card,
+          null,
+          2,
+        )}
+      </pre>
     </section>
   );
 }

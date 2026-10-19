@@ -30,6 +30,7 @@ Requires Node 20.19+ or 22.12+ (Vite 7).
 | Auto-advance (18 s, off by default) | `Auto-advance` button; any manual interaction turns it off |
 | Shuffle | `Shuffle` button |
 | Inspector (shows hidden fields) | `Inspector` button |
+| Studio (author your own cards) | `Studio` button, or `S` |
 
 `prefers-reduced-motion: reduce` replaces the slide/stroke-draw motion with immediate,
 minimal fades.
@@ -39,8 +40,9 @@ minimal fades.
 ```
 src/
   components/     DeviceFrame, PatentCardView, PatentControls,
-                  PatentCollectionOverview, DebugInspector
+                  PatentCollectionOverview, DebugInspector, StudioPanel
   data/           patentCards.ts — the 10 mock records
+  studio/         customCards.ts (localStorage store), diagramImage.ts (bitmap intake)
   diagrams/       one SVG component per invention + shared primitives + registry
   styles/         theme.css (design tokens), app.css (layout)
   types/          patent.ts — the PatentCard model
@@ -102,6 +104,25 @@ are fictional — verify symbols against the official scheme before relying on t
 
 When the records eventually come from an internal service, swap the import in `App.tsx` for a
 loader that returns the same `PatentCard[]` shape; the UI is unaware of the source.
+
+## Studio — authoring cards in the browser
+
+The `Studio` panel (desktop chrome only; hidden in presentation mode) writes the same
+`PatentCard` shape as the mock data, so authored cards join the carousel, overview, filters, and
+shuffle exactly like the shipped ones. Fields cover the full model: title, publication number and
+date, applicant, inventor, description, CPC code and hierarchy (one `symbol | title` line per
+rung), tags, curation status, featured flag, and the internal-only `sourceReference`.
+
+A diagram can be either one of the built-in line drawings or a bitmap uploaded from disk. Uploads
+are downscaled to a 900 px long edge and stored inline as a data URL, so a card stays
+self-contained and the device never fetches anything at runtime; PNG and GIF sources keep their
+alpha channel, everything else is re-encoded as JPEG. A bitmap takes precedence over the selected
+line diagram.
+
+Studio cards persist in `localStorage` under `patent-infotainment.studio.cards.v1` and are read
+back through `loadCustomCards()`, which drops malformed entries rather than throwing. Replacing
+that module with a fetch-backed store is the only change needed to persist them elsewhere; the
+card UI is unaware of where a record came from.
 
 ## How diagrams are selected
 
