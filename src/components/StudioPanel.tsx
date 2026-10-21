@@ -15,6 +15,8 @@ interface StudioPanelProps {
   cards: PatentCard[];
   /** Set when the card server could not be reached or read. */
   storeError: string | null;
+  /** False until the initial card load settles. */
+  loaded: boolean;
   onSave: (card: PatentCard) => Promise<SaveResult>;
   onDelete: (id: string) => Promise<string | null>;
   onClose: () => void;
@@ -125,11 +127,19 @@ function toCard(form: StudioForm): PatentCard {
   };
 }
 
-export function StudioPanel({ cards, storeError, onSave, onDelete, onClose }: StudioPanelProps) {
+export function StudioPanel({
+  cards,
+  storeError,
+  loaded,
+  onSave,
+  onDelete,
+  onClose,
+}: StudioPanelProps) {
   const [form, setForm] = useState<StudioForm>(emptyForm);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const locked = busy || !loaded;
 
   const update = <K extends keyof StudioForm>(key: K, value: StudioForm[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -182,7 +192,7 @@ export function StudioPanel({ cards, storeError, onSave, onDelete, onClose }: St
           <button
             type="button"
             className="chrome-button"
-            disabled={busy}
+            disabled={locked}
             onClick={() => {
               setForm(emptyForm);
               setError(null);
@@ -200,7 +210,7 @@ export function StudioPanel({ cards, storeError, onSave, onDelete, onClose }: St
       {storeError !== null ? <p className="studio__error">{storeError}</p> : null}
 
       <form className="studio__form" onSubmit={(event) => void handleSubmit(event)}>
-        <fieldset className="studio__fieldset" disabled={busy}>
+        <fieldset className="studio__fieldset" disabled={locked}>
           <div className="studio__grid">
             <label className="studio__field">
               <span className="label">Title</span>
@@ -400,7 +410,7 @@ export function StudioPanel({ cards, storeError, onSave, onDelete, onClose }: St
         </fieldset>
 
         <div className="studio__actions">
-          <button type="submit" className="chrome-button" disabled={busy}>
+          <button type="submit" className="chrome-button" disabled={locked}>
             {busy ? 'Saving…' : form.id === null ? 'Add card' : 'Save changes'}
           </button>
           {error !== null ? <span className="studio__error">{error}</span> : null}
@@ -417,7 +427,7 @@ export function StudioPanel({ cards, storeError, onSave, onDelete, onClose }: St
                 type="button"
                 className="chrome-button"
                 aria-pressed={form.id === card.id}
-                disabled={busy}
+                disabled={locked}
                 onClick={() => {
                   setForm(toForm(card));
                   setError(null);
@@ -429,7 +439,7 @@ export function StudioPanel({ cards, storeError, onSave, onDelete, onClose }: St
               <button
                 type="button"
                 className="chrome-button"
-                disabled={busy}
+                disabled={locked}
                 onClick={() => void handleDelete(card.id)}
               >
                 Delete

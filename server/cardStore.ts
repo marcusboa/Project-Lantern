@@ -11,6 +11,7 @@ const EXTENSIONS: Record<string, string> = { png: 'png', jpeg: 'jpg', gif: 'gif'
 export interface CardStore {
   imagesDir: string;
   list(): PatentCard[];
+  has(id: string): boolean;
   save(card: PatentCard): PatentCard;
   remove(id: string): void;
 }
@@ -49,6 +50,9 @@ export function openCardStore(dataDir = resolveDataDir()): CardStore {
       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
   `);
   const deleteOne = db.prepare<[string]>('DELETE FROM cards WHERE id = ?');
+  const selectImageUse = db.prepare<[string], { id: string }>(
+    "SELECT id FROM cards WHERE json_extract(card, '$.diagramImage.src') = ? LIMIT 1",
+  );
 
   const read = (row: { card: string } | undefined): PatentCard | null => {
     if (row === undefined) return null;
@@ -71,6 +75,7 @@ export function openCardStore(dataDir = resolveDataDir()): CardStore {
   const discardImage = (previous: PatentCard | null, next: PatentCard | null) => {
     const src = previous?.diagramImage?.src;
     if (src === undefined || src === next?.diagramImage?.src || !src.startsWith(IMAGE_ROUTE)) return;
+    if (selectImageUse.get(src) !== undefined) return;
     const file = src.slice(IMAGE_ROUTE.length);
     if (!IMAGE_FILE_PATTERN.test(file)) return;
     try {
@@ -83,6 +88,7 @@ export function openCardStore(dataDir = resolveDataDir()): CardStore {
   return {
     imagesDir,
     list: () => selectAll.all().flatMap((row) => read(row) ?? []),
+    has: (id) => selectOne.get(id) !== undefined,
     save: (card) => {
       const previous = read(selectOne.get(card.id));
       const stored = storeImage(card);

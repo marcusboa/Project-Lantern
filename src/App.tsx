@@ -67,6 +67,7 @@ export default function App() {
   const [studioOpen, setStudioOpen] = useState(false);
   const [customCards, setCustomCards] = useState<PatentCard[]>([]);
   const [storeError, setStoreError] = useState<string | null>(null);
+  const [cardsLoaded, setCardsLoaded] = useState(false);
 
   const collection = useMemo(() => [...patentCards, ...customCards], [customCards]);
 
@@ -128,9 +129,12 @@ export default function App() {
           if (cancelled) return;
           setCustomCards(cards);
           setStoreError(null);
+          setCardsLoaded(true);
         },
         (cause: unknown) => {
-          if (!cancelled) setStoreError(errorMessage(cause));
+          if (cancelled) return;
+          setStoreError(errorMessage(cause));
+          setCardsLoaded(true);
         },
       );
     return () => {
@@ -374,6 +378,7 @@ export default function App() {
         <StudioPanel
           cards={customCards}
           storeError={storeError}
+          loaded={cardsLoaded}
           onSave={saveCard}
           onDelete={deleteCard}
           onClose={() => setStudioOpen(false)}
