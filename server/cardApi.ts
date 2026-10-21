@@ -5,7 +5,8 @@ import type { CardStore } from './cardStore';
 /**
  * JSON API for Studio cards, meant to be mounted at `/api`:
  *   GET    /cards        list stored cards (oldest first)
- *   PUT    /cards/:id    create or replace a card; inline bitmaps are stored as files
+ *   PUT    /cards/:id    create or replace a card; inline bitmaps are stored as files.
+ *                         With `If-None-Match: *`, an existing card is not replaced (412).
  *   DELETE /cards/:id    remove a card and its stored bitmap
  *   GET    /images/:file stored bitmaps
  */
@@ -26,6 +27,10 @@ export function createCardApi(store: CardStore): express.Express {
     }
     if (card.id !== req.params.id) {
       res.status(400).json({ error: 'The card id does not match the URL.' });
+      return;
+    }
+    if (req.get('If-None-Match') === '*' && store.has(card.id)) {
+      res.status(412).json({ error: 'A card with this id already exists.' });
       return;
     }
     res.json(store.save(card));
