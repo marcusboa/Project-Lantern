@@ -58,7 +58,7 @@ export default function App() {
   const [index, setIndex] = useState(0);
   const [reverse, setReverse] = useState(false);
   const [outgoing, setOutgoing] = useState<Outgoing | null>(null);
-  const [classificationOpen, setClassificationOpen] = useState(false);
+  const [flippedId, setFlippedId] = useState<string | null>(null);
   const [presentation, setPresentation] = useState(false);
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
@@ -105,10 +105,11 @@ export default function App() {
     () => goTo(safeIndex - 1, { reverse: true }),
     [goTo, safeIndex],
   );
-  const toggleClassification = useCallback(() => {
-    setClassificationOpen((value) => !value);
+  const currentId = current?.id ?? null;
+  const flip = useCallback(() => {
+    setFlippedId((id) => (id === currentId ? null : currentId));
     setAutoAdvance(false);
-  }, []);
+  }, [currentId]);
 
   const shuffle = useCallback(() => {
     setAutoAdvance(false);
@@ -228,7 +229,7 @@ export default function App() {
         else if (studioOpen) setStudioOpen(false);
         else setPresentation(false);
       } else if (event.key === 'c' || event.key === 'C') {
-        setClassificationOpen((value) => !value);
+        flip();
       } else if (event.key === 'o' || event.key === 'O') {
         setOverviewOpen((value) => !value);
       } else if (event.key === 's' || event.key === 'S') {
@@ -238,7 +239,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [next, previous, overviewOpen, studioOpen]);
+  }, [next, previous, flip, overviewOpen, studioOpen]);
 
   return (
     <main className={presentation ? 'workspace workspace--presentation' : 'workspace'}>
@@ -285,13 +286,10 @@ export default function App() {
             <button
               type="button"
               className="chrome-button"
-              onClick={() => {
-                setClassificationOpen((value) => !value);
-                setAutoAdvance(false);
-              }}
-              aria-pressed={classificationOpen}
+              onClick={flip}
+              aria-pressed={current !== undefined && flippedId === current.id}
             >
-              Classification (C)
+              Flip card (C)
             </button>
             <button type="button" className="chrome-button" onClick={shuffle}>
               Shuffle
@@ -351,8 +349,8 @@ export default function App() {
             position={outgoing.position}
             total={cards.length}
             phase="exit"
-            classificationOpen={classificationOpen}
-            onToggleClassification={toggleClassification}
+            flipped={flippedId === outgoing.card.id}
+            onFlip={flip}
           />
         ) : null}
         {current ? (
@@ -363,8 +361,8 @@ export default function App() {
             total={cards.length}
             phase="enter"
             reverse={reverse}
-            classificationOpen={classificationOpen}
-            onToggleClassification={toggleClassification}
+            flipped={flippedId === current.id}
+            onFlip={flip}
           />
         ) : null}
         {current ? (

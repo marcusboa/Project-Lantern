@@ -14,11 +14,8 @@ interface CpcBreakdownProps {
   card: PatentCard;
 }
 
-/** Above this many levels rows drop to one line each so fifteen fit the card. */
-const ROOMY_LIMIT = 6;
-
-/** Deeper levels stack on one rail so long subgroup chains stay readable in the text column. */
-const MAX_INDENT = 4;
+/** Deeper levels stack on one rail so long subgroup chains keep room for their titles. */
+const MAX_INDENT = 8;
 
 const MISSING_TITLE = 'Definition not entered';
 
@@ -34,7 +31,6 @@ export function CpcBreakdown({ card }: CpcBreakdownProps) {
       : [...card.cpc.hierarchy, { symbol: code, title: '' }]
   ).slice(0, MAX_CPC_LINES);
   const leaf = levels.at(-1);
-  const dense = levels.length > ROOMY_LIMIT;
 
   const focus = (rank: CpcRank) => ({
     onMouseEnter: () => setActiveRank(rank),
@@ -43,9 +39,7 @@ export function CpcBreakdown({ card }: CpcBreakdownProps) {
 
   return (
     <section
-      className={['cpc', dense ? 'cpc--dense' : '', activeRank === null ? '' : 'cpc--focus']
-        .filter(Boolean)
-        .join(' ')}
+      className={['cpc', activeRank === null ? '' : 'cpc--focus'].filter(Boolean).join(' ')}
       aria-label={`Cooperative Patent Classification ${card.cpc.code}`}
     >
       <div className="cpc__head">
@@ -90,10 +84,7 @@ export function CpcBreakdown({ card }: CpcBreakdownProps) {
       </div>
 
       {levels.length > 0 ? (
-        <ol
-          className={dense ? 'cpc__tree cpc__tree--dense' : 'cpc__tree'}
-          aria-label="Classification hierarchy, broadest first"
-        >
+        <ol className="cpc__tree" aria-label="Classification hierarchy, broadest first">
           {levels.map((level, depth) => {
             const rank = rankOf(level.symbol);
             const [inherited, added] = splitInherited(level.symbol, levels[depth - 1]?.symbol);
