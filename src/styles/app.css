@@ -911,17 +911,14 @@ button {
   letter-spacing: 0;
 }
 
-.card__body--classification {
-  display: block;
-  min-width: 0;
-  overflow: hidden;
-  padding: 10px 0 8px;
+.card__text--cpc {
+  align-self: stretch;
 }
 
 .cpc {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
   height: 100%;
   min-height: 0;
   animation: cpc-in var(--duration-card) var(--ease-calm) both;
@@ -946,11 +943,10 @@ button {
 }
 
 .cpc__band {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: end;
-  gap: var(--space-5);
-  padding-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-bottom: 7px;
   border-bottom: var(--rule-width) solid var(--colour-rule);
 }
 
@@ -984,7 +980,7 @@ button {
 
 .cpc__segment-text {
   font-family: var(--font-technical);
-  font-size: 30px;
+  font-size: 26px;
   line-height: 1;
   letter-spacing: 0.02em;
   color: var(--rank-colour);
@@ -1011,8 +1007,6 @@ button {
   flex-direction: column;
   gap: 3px;
   min-width: 0;
-  padding-left: var(--space-4);
-  border-left: var(--rule-width) solid var(--colour-rule);
 }
 
 .cpc__summary-title {
@@ -1023,13 +1017,13 @@ button {
   overflow: hidden;
   margin: 0;
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.2;
   color: var(--colour-text-primary);
 }
 
 .cpc__tree {
-  --step: 22px;
+  --step: 18px;
   --chip-x: 6px;
   --chip-mid: 10px;
   display: flex;
@@ -1056,7 +1050,13 @@ button {
 }
 
 .cpc--dense .cpc__segment-text {
-  font-size: 22px;
+  font-size: 20px;
+}
+
+.cpc--dense .cpc__summary {
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--space-2);
 }
 
 .cpc--dense .cpc__summary-title {
@@ -1066,9 +1066,9 @@ button {
 }
 
 .cpc--dense .cpc__node {
-  padding: 0 5px;
-  font-size: 10px;
-  line-height: 13px;
+  padding: 0 4px;
+  font-size: 9.5px;
+  line-height: 12px;
 }
 
 .cpc__row {
@@ -1079,12 +1079,17 @@ button {
   min-width: 0;
   padding: 3px 0 3px calc(var(--depth) * var(--step));
   animation: cpc-row-in 420ms var(--ease-calm) both;
-  animation-delay: calc(160ms + var(--depth) * 45ms);
+  animation-delay: calc(160ms + var(--order) * 45ms);
   transition: opacity var(--duration-fast) var(--ease-calm);
 }
 
 .cpc__tree--dense .cpc__row {
+  gap: 7px;
   padding-block: 1px 0;
+}
+
+.cpc__tree .cpc__row.cpc__row--stacked::before {
+  display: none;
 }
 
 /* Elbow from the parent's rail into this row's node. */
@@ -1150,8 +1155,8 @@ button {
   padding-top: 0;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-size: 11px;
-  line-height: 15px;
+  font-size: 10.5px;
+  line-height: 14px;
 }
 
 .cpc__row--leaf .cpc__title {
@@ -1225,4 +1230,8 @@ button {
     from { opacity: 0; }
     to { opacity: 1; }
   }
+}
+
+.cpc__summary .label {
+  white-space: nowrap;
 }

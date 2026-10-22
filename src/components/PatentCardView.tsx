@@ -79,12 +79,12 @@ export function PatentCardView({
         </span>
       </header>
 
-      {showClassification ? (
-        <div className="card__body card__body--classification">
-          <CpcBreakdown card={card} />
-        </div>
-      ) : (
-        <div className="card__body">
+      <div className="card__body">
+        {showClassification ? (
+          <div className="card__text card__text--cpc">
+            <CpcBreakdown card={card} />
+          </div>
+        ) : (
           <div className="card__text">
             <h1 className="card__title">{card.displayTitle}</h1>
             <span className="card__date">
@@ -138,20 +138,20 @@ export function PatentCardView({
               </div>
             </dl>
           </div>
+        )}
 
-          <figure className="card__figure">
-            {card.diagramImage ? (
-              <img
-                className="card__diagram card__diagram--bitmap"
-                src={card.diagramImage.src}
-                alt={card.diagramImage.alt || `Diagram for ${card.displayTitle}`}
-              />
-            ) : (
-              <Diagram className="card__diagram" title={`Diagram for ${card.displayTitle}`} />
-            )}
-          </figure>
-        </div>
-      )}
+        <figure className="card__figure">
+          {card.diagramImage ? (
+            <img
+              className="card__diagram card__diagram--bitmap"
+              src={card.diagramImage.src}
+              alt={card.diagramImage.alt || `Diagram for ${card.displayTitle}`}
+            />
+          ) : (
+            <Diagram className="card__diagram" title={`Diagram for ${card.displayTitle}`} />
+          )}
+        </figure>
+      </div>
 
       <footer className="card__footer">
         <div className="card__footer-group">

@@ -15,7 +15,10 @@ interface CpcBreakdownProps {
 }
 
 /** Above this many levels rows drop to one line each so fifteen fit the card. */
-const ROOMY_LIMIT = 8;
+const ROOMY_LIMIT = 6;
+
+/** Deeper levels stack on one rail so long subgroup chains stay readable in the text column. */
+const MAX_INDENT = 4;
 
 const MISSING_TITLE = 'Definition not entered';
 
@@ -94,6 +97,8 @@ export function CpcBreakdown({ card }: CpcBreakdownProps) {
           {levels.map((level, depth) => {
             const rank = rankOf(level.symbol);
             const [inherited, added] = splitInherited(level.symbol, levels[depth - 1]?.symbol);
+            const indent = Math.min(depth, MAX_INDENT);
+            const stacked = depth > MAX_INDENT;
             return (
               <li
                 key={`${level.symbol}-${depth}`}
@@ -101,11 +106,12 @@ export function CpcBreakdown({ card }: CpcBreakdownProps) {
                   'cpc__row',
                   `cpc-rank--${rank}`,
                   depth === levels.length - 1 ? 'cpc__row--leaf' : '',
+                  stacked ? 'cpc__row--stacked' : '',
                   activeRank === rank ? 'is-active' : '',
                 ]
                   .filter(Boolean)
                   .join(' ')}
-                style={{ '--depth': depth } as CSSProperties}
+                style={{ '--depth': indent, '--order': depth } as CSSProperties}
                 {...focus(rank)}
               >
                 {level.symbol !== '' ? (
