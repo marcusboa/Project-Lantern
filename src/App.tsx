@@ -58,6 +58,7 @@ export default function App() {
   const [index, setIndex] = useState(0);
   const [reverse, setReverse] = useState(false);
   const [outgoing, setOutgoing] = useState<Outgoing | null>(null);
+  const [classificationOpen, setClassificationOpen] = useState(false);
   const [presentation, setPresentation] = useState(false);
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
@@ -104,6 +105,11 @@ export default function App() {
     () => goTo(safeIndex - 1, { reverse: true }),
     [goTo, safeIndex],
   );
+  const toggleClassification = useCallback(() => {
+    setClassificationOpen((value) => !value);
+    setAutoAdvance(false);
+  }, []);
+
   const shuffle = useCallback(() => {
     setAutoAdvance(false);
     setOrder(() => {
@@ -221,6 +227,8 @@ export default function App() {
         if (overviewOpen) setOverviewOpen(false);
         else if (studioOpen) setStudioOpen(false);
         else setPresentation(false);
+      } else if (event.key === 'c' || event.key === 'C') {
+        setClassificationOpen((value) => !value);
       } else if (event.key === 'o' || event.key === 'O') {
         setOverviewOpen((value) => !value);
       } else if (event.key === 's' || event.key === 'S') {
@@ -273,6 +281,17 @@ export default function App() {
               aria-pressed={overviewOpen}
             >
               Collection
+            </button>
+            <button
+              type="button"
+              className="chrome-button"
+              onClick={() => {
+                setClassificationOpen((value) => !value);
+                setAutoAdvance(false);
+              }}
+              aria-pressed={classificationOpen}
+            >
+              Classification (C)
             </button>
             <button type="button" className="chrome-button" onClick={shuffle}>
               Shuffle
@@ -332,6 +351,8 @@ export default function App() {
             position={outgoing.position}
             total={cards.length}
             phase="exit"
+            classificationOpen={classificationOpen}
+            onToggleClassification={toggleClassification}
           />
         ) : null}
         {current ? (
@@ -342,6 +363,8 @@ export default function App() {
             total={cards.length}
             phase="enter"
             reverse={reverse}
+            classificationOpen={classificationOpen}
+            onToggleClassification={toggleClassification}
           />
         ) : null}
         {current ? (

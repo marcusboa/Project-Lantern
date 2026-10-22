@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CURATION_STATUSES, DIAGRAM_KEYS, DIAGRAM_TYPES } from '../studio/cardSchema';
 import { createCardId, type SaveResult } from '../studio/cardStore';
 import { readDiagramImage } from '../studio/diagramImage';
+import { MAX_CPC_LINES } from '../cpc/cpcSymbol';
 import type {
   BitmapDiagram,
   CurationStatus,
@@ -41,10 +42,11 @@ interface StudioForm {
   featured: boolean;
 }
 
-const HIERARCHY_PLACEHOLDER = `G | Physics
-G06N | Computing arrangements based on specific computational models
-G06N 3/00 | Computing arrangements based on biological models
-G06N 3/006 | Based on simulated virtual individual or collective life forms, e.g. particle swarm optimisation [PSO]`;
+const HIERARCHY_PLACEHOLDER = `B | Performing operations; transporting
+B63 | Ships or other waterborne vessels; related equipment
+B63C | Launching, hauling-out, or dry-docking of vessels; life-saving in water; …
+B63C 11/00 | Equipment for dwelling or working under water; …
+B63C 11/02 | Divers' equipment`;
 
 const emptyForm: StudioForm = {
   id: null,
@@ -94,6 +96,7 @@ function parseHierarchy(text: string) {
     .split('\n')
     .map((line) => line.trim())
     .filter((line) => line !== '')
+    .slice(0, MAX_CPC_LINES)
     .map((line) => {
       const separator = line.indexOf('|');
       if (separator === -1) return { symbol: '', title: line };
@@ -286,7 +289,7 @@ export function StudioPanel({
                 className="studio__input"
                 name="cpcCode"
                 value={form.cpcCode}
-                placeholder="G06N 3/006"
+                placeholder="B63C 11/2209"
                 onChange={(event) => update('cpcCode', event.target.value)}
               />
             </label>
@@ -306,11 +309,11 @@ export function StudioPanel({
               </select>
             </label>
             <label className="studio__field studio__field--wide">
-              <span className="label">CPC hierarchy — one “symbol | title” per line, coarsest first</span>
+              <span className="label">CPC hierarchy — up to 15 “symbol | title” lines, coarsest first</span>
               <textarea
                 className="studio__input studio__input--area"
                 name="cpcHierarchy"
-                rows={4}
+                rows={6}
                 value={form.cpcHierarchy}
                 placeholder={HIERARCHY_PLACEHOLDER}
                 onChange={(event) => update('cpcHierarchy', event.target.value)}

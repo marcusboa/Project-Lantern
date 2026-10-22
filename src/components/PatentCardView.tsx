@@ -1,5 +1,7 @@
 import type { PatentCard } from '../types/patent';
 import { diagramRegistry } from '../diagrams';
+import { CpcBreakdown } from './CpcBreakdown';
+import { CpcCode } from './CpcCode';
 
 export type TransitionPhase = 'enter' | 'exit';
 
@@ -10,6 +12,9 @@ interface PatentCardViewProps {
   phase: TransitionPhase;
   /** Navigation direction; drives which side the card enters from. */
   reverse?: boolean;
+  /** Shows the dissected CPC classification in place of the card body. */
+  classificationOpen: boolean;
+  onToggleClassification: () => void;
 }
 
 const statusModifier: Record<PatentCard['curationStatus'], string> = {
@@ -35,11 +40,20 @@ function formatDate(isoLike: string): string {
   return `${day} ${monthLabel} ${year}`;
 }
 
-export function PatentCardView({ card, position, total, phase, reverse }: PatentCardViewProps) {
+export function PatentCardView({
+  card,
+  position,
+  total,
+  phase,
+  reverse,
+  classificationOpen,
+  onToggleClassification,
+}: PatentCardViewProps) {
   const Diagram = diagramRegistry[card.diagramComponent];
   const ancestors = card.cpc.hierarchy.slice(0, -1);
   const leaf = card.cpc.hierarchy.at(-1);
   const hasCpc = card.cpc.code !== '' || card.cpc.hierarchy.length > 0;
+  const showClassification = classificationOpen && hasCpc;
   const className = [
     'card',
     phase === 'enter' ? 'card--enter' : 'card--exit',
@@ -65,73 +79,79 @@ export function PatentCardView({ card, position, total, phase, reverse }: Patent
         </span>
       </header>
 
-      <div className="card__body">
-        <div className="card__text">
-          <h1 className="card__title">{card.displayTitle}</h1>
-          <span className="card__date">
-            {card.publicationDate !== '' ? (
-              <>
-                {formatDate(card.publicationDate)}
-                <span aria-hidden="true"> · </span>
-              </>
-            ) : null}
-            {card.diagramType.replace('-', ' ').toUpperCase()}
-          </span>
-          <p className="card__description">{card.plainLanguageDescription}</p>
-          {hasCpc ? (
-            <section className="card__cpc" aria-label="Cooperative Patent Classification">
-              <div className="card__cpc-head">
-                <span className="label">CPC</span>
-                <span className="card__cpc-code">{card.cpc.code}</span>
-              </div>
-              <ol
-                className="card__cpc-path"
-                title={ancestors.map((level) => `${level.symbol} ${level.title}`).join(' › ')}
-              >
-                {ancestors.map((level, levelIndex) => (
-                  <li className="card__cpc-level" key={`${level.symbol}-${levelIndex}`}>
-                    {level.title}
-                  </li>
-                ))}
-              </ol>
-              {leaf ? (
-                <p className="card__cpc-leaf" title={leaf.title}>
-                  {leaf.title}
-                </p>
-              ) : null}
-            </section>
-          ) : null}
-          <dl className="card__meta">
-            <div>
-              <dt className="label card__meta-term">Applicant</dt>
-              <dd className="card__meta-value">{card.applicant}</dd>
-            </div>
-            <div>
-              <dt className="label card__meta-term">Inventor</dt>
-              <dd className="card__meta-value">{card.inventor}</dd>
-            </div>
-            <div className="card__tags">
-              {card.tags.map((tag) => (
-                <span className="card__tag" key={tag}>
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </dl>
+      {showClassification ? (
+        <div className="card__body card__body--classification">
+          <CpcBreakdown card={card} />
         </div>
+      ) : (
+        <div className="card__body">
+          <div className="card__text">
+            <h1 className="card__title">{card.displayTitle}</h1>
+            <span className="card__date">
+              {card.publicationDate !== '' ? (
+                <>
+                  {formatDate(card.publicationDate)}
+                  <span aria-hidden="true"> · </span>
+                </>
+              ) : null}
+              {card.diagramType.replace('-', ' ').toUpperCase()}
+            </span>
+            <p className="card__description">{card.plainLanguageDescription}</p>
+            {hasCpc ? (
+              <section className="card__cpc" aria-label="Cooperative Patent Classification">
+                <div className="card__cpc-head">
+                  <span className="label">CPC</span>
+                  <CpcCode className="card__cpc-code" code={card.cpc.code} />
+                </div>
+                <ol
+                  className="card__cpc-path"
+                  title={ancestors.map((level) => `${level.symbol} ${level.title}`).join(' › ')}
+                >
+                  {ancestors.map((level, levelIndex) => (
+                    <li className="card__cpc-level" key={`${level.symbol}-${levelIndex}`}>
+                      {level.title}
+                    </li>
+                  ))}
+                </ol>
+                {leaf ? (
+                  <p className="card__cpc-leaf" title={leaf.title}>
+                    {leaf.title}
+                  </p>
+                ) : null}
+              </section>
+            ) : null}
+            <dl className="card__meta">
+              <div>
+                <dt className="label card__meta-term">Applicant</dt>
+                <dd className="card__meta-value">{card.applicant}</dd>
+              </div>
+              <div>
+                <dt className="label card__meta-term">Inventor</dt>
+                <dd className="card__meta-value">{card.inventor}</dd>
+              </div>
+              <div className="card__tags">
+                {card.tags.map((tag) => (
+                  <span className="card__tag" key={tag}>
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </dl>
+          </div>
 
-        <figure className="card__figure">
-          {card.diagramImage ? (
-            <img
-              className="card__diagram card__diagram--bitmap"
-              src={card.diagramImage.src}
-              alt={card.diagramImage.alt || `Diagram for ${card.displayTitle}`}
-            />
-          ) : (
-            <Diagram className="card__diagram" title={`Diagram for ${card.displayTitle}`} />
-          )}
-        </figure>
-      </div>
+          <figure className="card__figure">
+            {card.diagramImage ? (
+              <img
+                className="card__diagram card__diagram--bitmap"
+                src={card.diagramImage.src}
+                alt={card.diagramImage.alt || `Diagram for ${card.displayTitle}`}
+              />
+            ) : (
+              <Diagram className="card__diagram" title={`Diagram for ${card.displayTitle}`} />
+            )}
+          </figure>
+        </div>
+      )}
 
       <footer className="card__footer">
         <div className="card__footer-group">
@@ -139,6 +159,18 @@ export function PatentCardView({ card, position, total, phase, reverse }: Patent
             {formatSequence(position)} / {formatSequence(total)}
           </span>
           <span className="card__hint">← → Browse collection</span>
+          {hasCpc ? (
+            <button
+              type="button"
+              className="card__cpc-toggle"
+              aria-pressed={showClassification}
+              tabIndex={phase === 'exit' ? -1 : undefined}
+              onClick={onToggleClassification}
+            >
+              <span className="card__cpc-toggle-key">C</span>
+              {showClassification ? 'Card view' : 'Dissect classification'}
+            </button>
+          ) : null}
         </div>
       </footer>
     </article>
