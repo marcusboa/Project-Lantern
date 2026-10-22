@@ -58,6 +58,7 @@ export default function App() {
   const [index, setIndex] = useState(0);
   const [reverse, setReverse] = useState(false);
   const [outgoing, setOutgoing] = useState<Outgoing | null>(null);
+  const [flippedId, setFlippedId] = useState<string | null>(null);
   const [presentation, setPresentation] = useState(false);
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
@@ -104,6 +105,12 @@ export default function App() {
     () => goTo(safeIndex - 1, { reverse: true }),
     [goTo, safeIndex],
   );
+  const currentId = current?.id ?? null;
+  const flip = useCallback(() => {
+    setFlippedId((id) => (id === currentId ? null : currentId));
+    setAutoAdvance(false);
+  }, [currentId]);
+
   const shuffle = useCallback(() => {
     setAutoAdvance(false);
     setOrder(() => {
@@ -221,6 +228,8 @@ export default function App() {
         if (overviewOpen) setOverviewOpen(false);
         else if (studioOpen) setStudioOpen(false);
         else setPresentation(false);
+      } else if (event.key === 'c' || event.key === 'C') {
+        flip();
       } else if (event.key === 'o' || event.key === 'O') {
         setOverviewOpen((value) => !value);
       } else if (event.key === 's' || event.key === 'S') {
@@ -230,7 +239,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [next, previous, overviewOpen, studioOpen]);
+  }, [next, previous, flip, overviewOpen, studioOpen]);
 
   return (
     <main className={presentation ? 'workspace workspace--presentation' : 'workspace'}>
@@ -273,6 +282,14 @@ export default function App() {
               aria-pressed={overviewOpen}
             >
               Collection
+            </button>
+            <button
+              type="button"
+              className="chrome-button"
+              onClick={flip}
+              aria-pressed={current !== undefined && flippedId === current.id}
+            >
+              Flip card (C)
             </button>
             <button type="button" className="chrome-button" onClick={shuffle}>
               Shuffle
@@ -332,6 +349,8 @@ export default function App() {
             position={outgoing.position}
             total={cards.length}
             phase="exit"
+            flipped={flippedId === outgoing.card.id}
+            onFlip={flip}
           />
         ) : null}
         {current ? (
@@ -342,6 +361,8 @@ export default function App() {
             total={cards.length}
             phase="enter"
             reverse={reverse}
+            flipped={flippedId === current.id}
+            onFlip={flip}
           />
         ) : null}
         {current ? (

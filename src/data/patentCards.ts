@@ -121,17 +121,25 @@ export const patentCards: PatentCard[] = [
     applicant: 'Ardent Marine Instruments (Fictional)',
     inventor: 'E. Notional',
     plainLanguageDescription:
-      'A diving instrument whose bearing ring stays level through a nested gimbal, so depth and heading can be read in a single glance.',
+      'A diver\u2019s first-stage regulator carrying a nested-gimbal depth and bearing ring, so supply, depth and heading can be read in a single glance.',
     cpc: {
-      code: 'G01C 13/00',
+      code: 'B63C 11/2209',
       hierarchy: [
-        { symbol: 'G', title: 'Physics' },
-        { symbol: 'G01', title: 'Measuring; testing' },
+        { symbol: 'B', title: 'Performing operations; transporting' },
+        { symbol: 'B63', title: 'Ships or other waterborne vessels; related equipment' },
         {
-          symbol: 'G01C',
-          title: 'Measuring distances, levels or bearings; surveying; navigation; gyroscopic instruments',
+          symbol: 'B63C',
+          title:
+            'Launching, hauling-out, or dry-docking of vessels; life-saving in water; equipment for dwelling or working under water; means for salvaging or searching for underwater objects',
         },
-        { symbol: 'G01C 13/00', title: 'Surveying specially adapted to open water, e.g. sea or lake' },
+        {
+          symbol: 'B63C 11/00',
+          title: 'Equipment for dwelling or working underwater; means for searching for underwater objects',
+        },
+        { symbol: 'B63C 11/02', title: 'Divers\u2019 equipment' },
+        { symbol: 'B63C 11/18', title: 'Air supply' },
+        { symbol: 'B63C 11/22', title: 'Air supply carried by diver' },
+        { symbol: 'B63C 11/2209', title: 'First-stage regulators' },
       ],
     },
     diagramType: 'assembly',
