@@ -24,4 +24,4 @@ dist-ssr
 *.sw?
 
 # Studio card database and uploaded diagrams
-data/
+/data/
