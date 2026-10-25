@@ -37,7 +37,29 @@ function buildCaption(card: PatentCard, definition: string | undefined): string 
   return lines.join('\n').trim();
 }
 
+const SVG_STYLE_PROPS = [
+  'fill',
+  'stroke',
+  'stroke-width',
+  'stroke-dasharray',
+  'opacity',
+  'font-family',
+  'font-size',
+  'letter-spacing',
+];
+
+/** The PNG renderer drops stylesheet rules inside inline SVGs, so pin their computed styles. */
+function inlineSvgStyles(node: HTMLElement) {
+  node.querySelectorAll<SVGElement>('svg *').forEach((element) => {
+    const computed = getComputedStyle(element);
+    for (const prop of SVG_STYLE_PROPS) {
+      element.style.setProperty(prop, computed.getPropertyValue(prop));
+    }
+  });
+}
+
 async function downloadSlide(node: HTMLElement, filename: string) {
+  inlineSvgStyles(node);
   const dataUrl = await toPng(node, {
     width: SLIDE_WIDTH,
     height: SLIDE_HEIGHT,
