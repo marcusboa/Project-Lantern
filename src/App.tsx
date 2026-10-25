@@ -31,6 +31,7 @@ interface Outgoing {
   card: PatentCard;
   position: number;
   key: number;
+  flipped: boolean;
 }
 
 function prefersReducedMotion(): boolean {
@@ -89,12 +90,18 @@ export default function App() {
       setTransitionKey(nextKey);
       setReverse(options?.reverse ?? false);
       if (!prefersReducedMotion()) {
-        setOutgoing({ card: cards[safeIndex], position: safeIndex + 1, key: nextKey });
+        setOutgoing({
+          card: cards[safeIndex],
+          position: safeIndex + 1,
+          key: nextKey,
+          flipped: flippedId === cards[safeIndex].id,
+        });
       }
       setIndex(wrapped);
+      setFlippedId(null);
       if (!options?.auto) setAutoAdvance(false);
     },
-    [cards, safeIndex, transitionKey],
+    [cards, safeIndex, transitionKey, flippedId],
   );
 
   const next = useCallback(
@@ -105,11 +112,13 @@ export default function App() {
     () => goTo(safeIndex - 1, { reverse: true }),
     [goTo, safeIndex],
   );
-  const currentId = current?.id ?? null;
+  const flippableId =
+    current && (current.cpc.code !== '' || current.cpc.hierarchy.length > 0) ? current.id : null;
   const flip = useCallback(() => {
-    setFlippedId((id) => (id === currentId ? null : currentId));
+    if (flippableId === null) return;
+    setFlippedId((id) => (id === flippableId ? null : flippableId));
     setAutoAdvance(false);
-  }, [currentId]);
+  }, [flippableId]);
 
   const shuffle = useCallback(() => {
     setAutoAdvance(false);
@@ -287,7 +296,8 @@ export default function App() {
               type="button"
               className="chrome-button"
               onClick={flip}
-              aria-pressed={current !== undefined && flippedId === current.id}
+              disabled={flippableId === null}
+              aria-pressed={flippableId !== null && flippedId === flippableId}
             >
               Flip card (C)
             </button>
@@ -349,7 +359,7 @@ export default function App() {
             position={outgoing.position}
             total={cards.length}
             phase="exit"
-            flipped={flippedId === outgoing.card.id}
+            flipped={outgoing.flipped}
             onFlip={flip}
           />
         ) : null}

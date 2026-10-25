@@ -105,6 +105,12 @@ button {
   color: var(--colour-text-primary);
 }
 
+.chrome-button:disabled {
+  border-color: var(--colour-rule);
+  color: var(--colour-text-tertiary);
+  cursor: not-allowed;
+}
+
 .chrome-select {
   padding: 4px 6px;
   background: transparent;
