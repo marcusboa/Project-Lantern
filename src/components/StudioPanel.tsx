@@ -20,6 +20,8 @@ interface StudioPanelProps {
   loaded: boolean;
   onSave: (card: PatentCard) => Promise<SaveResult>;
   onDelete: (id: string) => Promise<string | null>;
+  /** Opens the Instagram export for a saved card. */
+  onExport: (card: PatentCard) => void;
   onClose: () => void;
 }
 
@@ -136,6 +138,7 @@ export function StudioPanel({
   loaded,
   onSave,
   onDelete,
+  onExport,
   onClose,
 }: StudioPanelProps) {
   const [form, setForm] = useState<StudioForm>(emptyForm);
@@ -438,6 +441,14 @@ export function StudioPanel({
                 }}
               >
                 Edit
+              </button>
+              <button
+                type="button"
+                className="chrome-button"
+                disabled={locked}
+                onClick={() => onExport(card)}
+              >
+                Instagram
               </button>
               <button
                 type="button"

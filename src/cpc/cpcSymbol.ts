@@ -1,4 +1,4 @@
-import type { CpcLevel } from '../types/patent';
+import type { CpcClassification, CpcLevel } from '../types/patent';
 
 /** Most hierarchy levels a card shows; Studio trims longer chains to this. */
 export const MAX_CPC_LINES = 15;
@@ -73,6 +73,12 @@ export function dissectCode(code: string): CpcSegment[] | null {
 export function titleFor(hierarchy: CpcLevel[], symbol: string): string | undefined {
   const target = normalise(symbol);
   return hierarchy.find((level) => normalise(level.symbol) === target)?.title;
+}
+
+/** Definition of the code's main group (e.g. 'B63C 11/00' for 'B63C 11/2209'), if listed. */
+export function mainGroupTitle(cpc: CpcClassification): string | undefined {
+  const group = dissectCode(cpc.code)?.find((segment) => segment.rank === 'group');
+  return group ? titleFor(cpc.hierarchy, group.symbol) : undefined;
 }
 
 /**

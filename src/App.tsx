@@ -5,6 +5,7 @@ import { PatentControls } from './components/PatentControls';
 import { PatentCollectionOverview } from './components/PatentCollectionOverview';
 import { DebugInspector } from './components/DebugInspector';
 import { StudioPanel } from './components/StudioPanel';
+import { InstagramExport } from './components/InstagramExport';
 import {
   errorMessage,
   fetchCards,
@@ -70,6 +71,7 @@ export default function App() {
   const [customCards, setCustomCards] = useState<PatentCard[]>([]);
   const [storeError, setStoreError] = useState<string | null>(null);
   const [cardsLoaded, setCardsLoaded] = useState(false);
+  const [exportCard, setExportCard] = useState<PatentCard | null>(null);
 
   const collection = useMemo(() => [...patentCards, ...customCards], [customCards]);
 
@@ -225,6 +227,10 @@ export default function App() {
         (event.key === 'Enter' || event.key === ' ') &&
         target?.closest('button, a[href]') != null;
       if (inTextEntry || activatesControl) return;
+      if (exportCard !== null) {
+        if (event.key === 'Escape') setExportCard(null);
+        return;
+      }
 
       if (event.key !== 'Shift' && event.key !== 'Tab') setAutoAdvance(false);
       if (event.key === 'ArrowRight') {
@@ -248,7 +254,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [next, previous, flip, overviewOpen, studioOpen]);
+  }, [next, previous, flip, overviewOpen, studioOpen, exportCard]);
 
   return (
     <main className={presentation ? 'workspace workspace--presentation' : 'workspace'}>
@@ -322,6 +328,17 @@ export default function App() {
               aria-pressed={studioOpen}
             >
               Studio (S)
+            </button>
+            <button
+              type="button"
+              className="chrome-button"
+              disabled={!current}
+              onClick={() => {
+                if (current) setExportCard(current);
+                setAutoAdvance(false);
+              }}
+            >
+              Instagram
             </button>
             <button
               type="button"
@@ -412,11 +429,19 @@ export default function App() {
           loaded={cardsLoaded}
           onSave={saveCard}
           onDelete={deleteCard}
+          onExport={(card) => {
+            setExportCard(card);
+            setAutoAdvance(false);
+          }}
           onClose={() => setStudioOpen(false)}
         />
       ) : null}
 
       {!presentation && inspectorOpen && current ? <DebugInspector card={current} /> : null}
+
+      {exportCard !== null ? (
+        <InstagramExport card={exportCard} onClose={() => setExportCard(null)} />
+      ) : null}
     </main>
   );
 }

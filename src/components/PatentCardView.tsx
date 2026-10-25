@@ -1,7 +1,8 @@
 import type { PatentCard } from '../types/patent';
 import { diagramRegistry } from '../diagrams';
 import { CpcBreakdown } from './CpcBreakdown';
-import { dissectCode, titleFor } from '../cpc/cpcSymbol';
+import { mainGroupTitle as findMainGroupTitle } from '../cpc/cpcSymbol';
+import { formatDate } from '../cards/formatDate';
 import { useFitScale } from '../hooks/useFitScale';
 
 export type TransitionPhase = 'enter' | 'exit';
@@ -29,18 +30,6 @@ function formatSequence(value: number): string {
   return String(value).padStart(2, '0');
 }
 
-function formatDate(isoLike: string): string {
-  const [year, month, day] = isoLike.split('-');
-  if (day === undefined) return isoLike;
-  const months = [
-    'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-    'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
-  ];
-  const monthIndex = Number(month) - 1;
-  const monthLabel = months[monthIndex] ?? month;
-  return `${day} ${monthLabel} ${year}`;
-}
-
 export function PatentCardView({
   card,
   position,
@@ -53,8 +42,7 @@ export function PatentCardView({
   const Diagram = diagramRegistry[card.diagramComponent];
   const hasCpc = card.cpc.code !== '' || card.cpc.hierarchy.length > 0;
   const showBack = flipped && hasCpc;
-  const mainGroup = dissectCode(card.cpc.code)?.find((segment) => segment.rank === 'group');
-  const mainGroupTitle = mainGroup ? titleFor(card.cpc.hierarchy, mainGroup.symbol) : undefined;
+  const mainGroupTitle = findMainGroupTitle(card.cpc);
   const frontText = useFitScale<HTMLDivElement>(
     [
       card.displayTitle,
