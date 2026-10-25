@@ -1,15 +1,19 @@
-import { useState } from 'react';
-import { CURATION_STATUSES, DIAGRAM_KEYS, DIAGRAM_TYPES } from '../studio/cardSchema';
-import { createCardId, type SaveResult } from '../studio/cardStore';
-import { readDiagramImage } from '../studio/diagramImage';
-import { MAX_CPC_LINES } from '../cpc/cpcSymbol';
+import { useState } from "react";
+import {
+  CURATION_STATUSES,
+  DIAGRAM_KEYS,
+  DIAGRAM_TYPES,
+} from "../studio/cardSchema";
+import { createCardId, type SaveResult } from "../studio/cardStore";
+import { readDiagramImage } from "../studio/diagramImage";
+import { MAX_CPC_LINES } from "../cpc/cpcSymbol";
 import type {
   BitmapDiagram,
   CurationStatus,
   DiagramKey,
   DiagramType,
   PatentCard,
-} from '../types/patent';
+} from "../types/patent";
 
 interface StudioPanelProps {
   /** Studio-authored cards only; the mock collection is not editable here. */
@@ -53,21 +57,21 @@ B63C 11/02 | Divers' equipment`;
 
 const emptyForm: StudioForm = {
   id: null,
-  publicationNumber: '',
-  country: '',
-  displayTitle: '',
-  publicationDate: '',
-  applicant: '',
-  inventor: '',
-  plainLanguageDescription: '',
-  cpcCode: '',
-  cpcHierarchy: '',
-  diagramType: 'schematic',
+  publicationNumber: "",
+  country: "",
+  displayTitle: "",
+  publicationDate: "",
+  applicant: "",
+  inventor: "",
+  plainLanguageDescription: "",
+  cpcCode: "",
+  cpcHierarchy: "",
+  diagramType: "schematic",
   diagramComponent: DIAGRAM_KEYS[0],
   diagramImage: null,
-  sourceReference: '',
-  curationStatus: 'Draft',
-  tags: '',
+  sourceReference: "",
+  curationStatus: "Draft",
+  tags: "",
   featured: false,
 };
 
@@ -84,13 +88,13 @@ function toForm(card: PatentCard): StudioForm {
     cpcCode: card.cpc.code,
     cpcHierarchy: card.cpc.hierarchy
       .map((level) => `${level.symbol} | ${level.title}`)
-      .join('\n'),
+      .join("\n"),
     diagramType: card.diagramType,
     diagramComponent: card.diagramComponent,
     diagramImage: card.diagramImage ?? null,
     sourceReference: card.sourceReference,
     curationStatus: card.curationStatus,
-    tags: card.tags.join(', '),
+    tags: card.tags.join(", "),
     featured: card.featured,
   };
 }
@@ -98,13 +102,13 @@ function toForm(card: PatentCard): StudioForm {
 /** Each line is `SYMBOL | Title`; a line without a pipe is treated as a title only. */
 function parseHierarchy(text: string) {
   return text
-    .split('\n')
+    .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line !== '')
+    .filter((line) => line !== "")
     .slice(0, MAX_CPC_LINES)
     .map((line) => {
-      const separator = line.indexOf('|');
-      if (separator === -1) return { symbol: '', title: line };
+      const separator = line.indexOf("|");
+      if (separator === -1) return { symbol: "", title: line };
       return {
         symbol: line.slice(0, separator).trim(),
         title: line.slice(separator + 1).trim(),
@@ -122,16 +126,19 @@ function toCard(form: StudioForm): PatentCard {
     applicant: form.applicant.trim(),
     inventor: form.inventor.trim(),
     plainLanguageDescription: form.plainLanguageDescription.trim(),
-    cpc: { code: form.cpcCode.trim(), hierarchy: parseHierarchy(form.cpcHierarchy) },
+    cpc: {
+      code: form.cpcCode.trim(),
+      hierarchy: parseHierarchy(form.cpcHierarchy),
+    },
     diagramType: form.diagramType,
     diagramComponent: form.diagramComponent,
     ...(form.diagramImage ? { diagramImage: form.diagramImage } : {}),
     sourceReference: form.sourceReference.trim(),
     curationStatus: form.curationStatus,
     tags: form.tags
-      .split(',')
+      .split(",")
       .map((tag) => tag.trim())
-      .filter((tag) => tag !== ''),
+      .filter((tag) => tag !== ""),
     featured: form.featured,
   };
 }
@@ -161,28 +168,44 @@ export function StudioPanel({
     setError(null);
     try {
       const image = await readDiagramImage(file);
-      update('diagramImage', { ...image, alt: form.diagramImage?.alt ?? '' });
+      update("diagramImage", { ...image, alt: form.diagramImage?.alt ?? "" });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'That image could not be read.');
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "That image could not be read.",
+      );
     }
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (form.displayTitle.trim() === '') {
-      setError('A title is required.');
-      return;
+  const saveForm = async (): Promise<PatentCard | null> => {
+    if (form.displayTitle.trim() === "") {
+      setError("A title is required.");
+      return null;
     }
     setBusy(true);
     const result = await onSave(toCard(form));
     setBusy(false);
     if (!result.ok) {
       setError(result.error);
-      return;
+      return null;
     }
     setError(null);
-    setMessage(form.id === null ? 'Card added to the collection.' : 'Card updated.');
+    setMessage(
+      form.id === null ? "Card added to the collection." : "Card updated.",
+    );
     setForm(toForm(result.card));
+    return result.card;
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    void saveForm();
+  };
+
+  const handleSaveAndExport = async () => {
+    const card = await saveForm();
+    if (card !== null) onExport(card);
   };
 
   const handleDelete = async (id: string) => {
@@ -190,7 +213,7 @@ export function StudioPanel({
     const failure = await onDelete(id);
     setBusy(false);
     setError(failure);
-    setMessage(failure === null ? 'Card deleted.' : null);
+    setMessage(failure === null ? "Card deleted." : null);
     if (failure === null && form.id === id) setForm(emptyForm);
   };
 
@@ -217,9 +240,14 @@ export function StudioPanel({
         </div>
       </header>
 
-      {storeError !== null ? <p className="studio__error">{storeError}</p> : null}
+      {storeError !== null ? (
+        <p className="studio__error">{storeError}</p>
+      ) : null}
 
-      <form className="studio__form" onSubmit={(event) => void handleSubmit(event)}>
+      <form
+        className="studio__form"
+        onSubmit={(event) => void handleSubmit(event)}
+      >
         <fieldset className="studio__fieldset" disabled={locked}>
           <div className="studio__grid">
             <label className="studio__field">
@@ -228,7 +256,7 @@ export function StudioPanel({
                 className="studio__input"
                 name="displayTitle"
                 value={form.displayTitle}
-                onChange={(event) => update('displayTitle', event.target.value)}
+                onChange={(event) => update("displayTitle", event.target.value)}
                 required
               />
             </label>
@@ -239,7 +267,9 @@ export function StudioPanel({
                 name="publicationNumber"
                 value={form.publicationNumber}
                 placeholder="US 20XX/0000011 A1"
-                onChange={(event) => update('publicationNumber', event.target.value)}
+                onChange={(event) =>
+                  update("publicationNumber", event.target.value)
+                }
               />
             </label>
             <label className="studio__field">
@@ -249,7 +279,7 @@ export function StudioPanel({
                 name="country"
                 value={form.country}
                 placeholder="Leave blank to use the number's prefix (US → United States)"
-                onChange={(event) => update('country', event.target.value)}
+                onChange={(event) => update("country", event.target.value)}
               />
             </label>
             <label className="studio__field">
@@ -259,7 +289,9 @@ export function StudioPanel({
                 name="publicationDate"
                 value={form.publicationDate}
                 placeholder="2024-05-09"
-                onChange={(event) => update('publicationDate', event.target.value)}
+                onChange={(event) =>
+                  update("publicationDate", event.target.value)
+                }
               />
             </label>
             <label className="studio__field">
@@ -268,7 +300,7 @@ export function StudioPanel({
                 className="studio__input"
                 name="applicant"
                 value={form.applicant}
-                onChange={(event) => update('applicant', event.target.value)}
+                onChange={(event) => update("applicant", event.target.value)}
               />
             </label>
             <label className="studio__field">
@@ -277,7 +309,7 @@ export function StudioPanel({
                 className="studio__input"
                 name="inventor"
                 value={form.inventor}
-                onChange={(event) => update('inventor', event.target.value)}
+                onChange={(event) => update("inventor", event.target.value)}
               />
             </label>
             <label className="studio__field">
@@ -287,7 +319,7 @@ export function StudioPanel({
                 name="tags"
                 value={form.tags}
                 placeholder="Mechanical, Consumer"
-                onChange={(event) => update('tags', event.target.value)}
+                onChange={(event) => update("tags", event.target.value)}
               />
             </label>
             <label className="studio__field studio__field--wide">
@@ -297,7 +329,9 @@ export function StudioPanel({
                 name="plainLanguageDescription"
                 rows={3}
                 value={form.plainLanguageDescription}
-                onChange={(event) => update('plainLanguageDescription', event.target.value)}
+                onChange={(event) =>
+                  update("plainLanguageDescription", event.target.value)
+                }
               />
             </label>
             <label className="studio__field">
@@ -307,7 +341,7 @@ export function StudioPanel({
                 name="cpcCode"
                 value={form.cpcCode}
                 placeholder="B63C 11/2209"
-                onChange={(event) => update('cpcCode', event.target.value)}
+                onChange={(event) => update("cpcCode", event.target.value)}
               />
             </label>
             <label className="studio__field">
@@ -316,7 +350,9 @@ export function StudioPanel({
                 className="studio__input"
                 name="curationStatus"
                 value={form.curationStatus}
-                onChange={(event) => update('curationStatus', event.target.value as CurationStatus)}
+                onChange={(event) =>
+                  update("curationStatus", event.target.value as CurationStatus)
+                }
               >
                 {CURATION_STATUSES.map((status) => (
                   <option key={status} value={status}>
@@ -326,14 +362,16 @@ export function StudioPanel({
               </select>
             </label>
             <label className="studio__field studio__field--wide">
-              <span className="label">CPC hierarchy — up to 15 “symbol | title” lines, coarsest first</span>
+              <span className="label">
+                CPC hierarchy — up to 15 “symbol | title” lines, coarsest first
+              </span>
               <textarea
                 className="studio__input studio__input--area"
                 name="cpcHierarchy"
                 rows={6}
                 value={form.cpcHierarchy}
                 placeholder={HIERARCHY_PLACEHOLDER}
-                onChange={(event) => update('cpcHierarchy', event.target.value)}
+                onChange={(event) => update("cpcHierarchy", event.target.value)}
               />
             </label>
             <label className="studio__field">
@@ -342,7 +380,9 @@ export function StudioPanel({
                 className="studio__input"
                 name="diagramType"
                 value={form.diagramType}
-                onChange={(event) => update('diagramType', event.target.value as DiagramType)}
+                onChange={(event) =>
+                  update("diagramType", event.target.value as DiagramType)
+                }
               >
                 {DIAGRAM_TYPES.map((type) => (
                   <option key={type} value={type}>
@@ -358,7 +398,9 @@ export function StudioPanel({
                 name="diagramComponent"
                 value={form.diagramComponent}
                 disabled={form.diagramImage !== null}
-                onChange={(event) => update('diagramComponent', event.target.value as DiagramKey)}
+                onChange={(event) =>
+                  update("diagramComponent", event.target.value as DiagramKey)
+                }
               >
                 {DIAGRAM_KEYS.map((key) => (
                   <option key={key} value={key}>
@@ -376,7 +418,7 @@ export function StudioPanel({
                 accept="image/*"
                 onChange={(event) => {
                   void handleImage(event.target.files?.[0]);
-                  event.target.value = '';
+                  event.target.value = "";
                 }}
               />
             </label>
@@ -385,12 +427,14 @@ export function StudioPanel({
               <input
                 className="studio__input"
                 name="diagramAlt"
-                value={form.diagramImage?.alt ?? ''}
+                value={form.diagramImage?.alt ?? ""}
                 disabled={form.diagramImage === null}
                 onChange={(event) =>
                   update(
-                    'diagramImage',
-                    form.diagramImage ? { ...form.diagramImage, alt: event.target.value } : null,
+                    "diagramImage",
+                    form.diagramImage
+                      ? { ...form.diagramImage, alt: event.target.value }
+                      : null,
                   )
                 }
               />
@@ -402,7 +446,9 @@ export function StudioPanel({
                 name="sourceReference"
                 value={form.sourceReference}
                 placeholder="internal://archive/…"
-                onChange={(event) => update('sourceReference', event.target.value)}
+                onChange={(event) =>
+                  update("sourceReference", event.target.value)
+                }
               />
             </label>
             <label className="studio__field studio__field--inline">
@@ -410,17 +456,21 @@ export function StudioPanel({
                 type="checkbox"
                 name="featured"
                 checked={form.featured}
-                onChange={(event) => update('featured', event.target.checked)}
+                onChange={(event) => update("featured", event.target.checked)}
               />
               <span className="label">Featured</span>
             </label>
             {form.diagramImage ? (
               <div className="studio__field studio__field--inline">
-                <img className="studio__thumb" src={form.diagramImage.src} alt="" />
+                <img
+                  className="studio__thumb"
+                  src={form.diagramImage.src}
+                  alt=""
+                />
                 <button
                   type="button"
                   className="chrome-button"
-                  onClick={() => update('diagramImage', null)}
+                  onClick={() => update("diagramImage", null)}
                 >
                   Remove image
                 </button>
@@ -431,10 +481,22 @@ export function StudioPanel({
 
         <div className="studio__actions">
           <button type="submit" className="chrome-button" disabled={locked}>
-            {busy ? 'Saving…' : form.id === null ? 'Add card' : 'Save changes'}
+            {busy ? "Saving…" : form.id === null ? "Add card" : "Save changes"}
           </button>
-          {error !== null ? <span className="studio__error">{error}</span> : null}
-          {message !== null ? <span className="studio__message">{message}</span> : null}
+          <button
+            type="button"
+            className="chrome-button"
+            disabled={locked}
+            onClick={() => void handleSaveAndExport()}
+          >
+            Save &amp; export for Instagram
+          </button>
+          {error !== null ? (
+            <span className="studio__error">{error}</span>
+          ) : null}
+          {message !== null ? (
+            <span className="studio__message">{message}</span>
+          ) : null}
         </div>
       </form>
 
