@@ -46,6 +46,8 @@ export interface BitmapDiagram {
 export interface PatentCard {
   id: string;
   publicationNumber: string;
+  /** Country of application; empty falls back to the publication number's office prefix. */
+  country: string;
   displayTitle: string;
   publicationDate: string;
   applicant: string;

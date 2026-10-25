@@ -74,6 +74,7 @@ export function parseCard(value: unknown): PatentCard | null {
   return {
     id,
     publicationNumber: asString(value.publicationNumber),
+    country: asString(value.country),
     displayTitle,
     publicationDate: asString(value.publicationDate),
     applicant: asString(value.applicant),

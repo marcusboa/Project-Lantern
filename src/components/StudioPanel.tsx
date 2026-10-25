@@ -28,6 +28,7 @@ interface StudioPanelProps {
 interface StudioForm {
   id: string | null;
   publicationNumber: string;
+  country: string;
   displayTitle: string;
   publicationDate: string;
   applicant: string;
@@ -53,6 +54,7 @@ B63C 11/02 | Divers' equipment`;
 const emptyForm: StudioForm = {
   id: null,
   publicationNumber: '',
+  country: '',
   displayTitle: '',
   publicationDate: '',
   applicant: '',
@@ -73,6 +75,7 @@ function toForm(card: PatentCard): StudioForm {
   return {
     id: card.id,
     publicationNumber: card.publicationNumber,
+    country: card.country,
     displayTitle: card.displayTitle,
     publicationDate: card.publicationDate,
     applicant: card.applicant,
@@ -113,6 +116,7 @@ function toCard(form: StudioForm): PatentCard {
   return {
     id: form.id ?? createCardId(),
     publicationNumber: form.publicationNumber.trim(),
+    country: form.country.trim(),
     displayTitle: form.displayTitle.trim(),
     publicationDate: form.publicationDate.trim(),
     applicant: form.applicant.trim(),
@@ -236,6 +240,16 @@ export function StudioPanel({
                 value={form.publicationNumber}
                 placeholder="US 20XX/0000011 A1"
                 onChange={(event) => update('publicationNumber', event.target.value)}
+              />
+            </label>
+            <label className="studio__field">
+              <span className="label">Country of application</span>
+              <input
+                className="studio__input"
+                name="country"
+                value={form.country}
+                placeholder="Leave blank to use the number's prefix (US → United States)"
+                onChange={(event) => update('country', event.target.value)}
               />
             </label>
             <label className="studio__field">

@@ -301,6 +301,11 @@ button {
   color: var(--colour-text-secondary);
 }
 
+.card__field {
+  display: grid;
+  gap: calc(4px * var(--fit, 1));
+}
+
 .card__cpc {
   display: flex;
   flex-wrap: wrap;

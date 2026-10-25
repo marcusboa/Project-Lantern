@@ -4,6 +4,8 @@ import type { PatentCard } from '../types/patent';
 import { diagramRegistry } from '../diagrams';
 import { CpcBreakdown } from './CpcBreakdown';
 import { mainGroupTitle } from '../cpc/cpcSymbol';
+import { countryOf } from '../cards/country';
+import { CardFrontDetails } from './CardFrontDetails';
 import { formatDate } from '../cards/formatDate';
 import { useFitScale } from '../hooks/useFitScale';
 
@@ -30,6 +32,8 @@ function buildCaption(card: PatentCard, definition: string | undefined): string 
   const lines = [card.displayTitle, '', card.plainLanguageDescription, ''];
   if (card.cpc.code !== '')
     lines.push(`CPC ${card.cpc.code}${definition ? ` — ${definition}` : ''}`);
+  if (card.publicationNumber) lines.push(`Patent number: ${card.publicationNumber}`);
+  if (countryOf(card)) lines.push(`Country: ${countryOf(card)}`);
   if (card.applicant) lines.push(`Applicant: ${card.applicant}`);
   if (card.inventor) lines.push(`Inventor: ${card.inventor}`);
   if (card.publicationDate) lines.push(`Published: ${formatDate(card.publicationDate)}`);
@@ -78,7 +82,13 @@ function FrontSlide({ card, definition }: { card: PatentCard; definition: string
   const Diagram = diagramRegistry[card.diagramComponent];
   const text = useFitScale<HTMLDivElement>(
     JSON.stringify([card.displayTitle, card.plainLanguageDescription, card.cpc.code, definition]) +
-      [card.applicant, card.inventor, card.publicationDate].join('|'),
+      [
+        card.publicationNumber,
+        card.country,
+        card.applicant,
+        card.inventor,
+        card.publicationDate,
+      ].join('|'),
     0.6,
     1.4,
   );
@@ -96,31 +106,7 @@ function FrontSlide({ card, definition }: { card: PatentCard; definition: string
         )}
       </figure>
       <div className="ig-slide__text" ref={text}>
-        <h2 className="card__title">{card.displayTitle}</h2>
-        <p className="card__description">{card.plainLanguageDescription}</p>
-        {card.cpc.code !== '' ? (
-          <div className="card__cpc">
-            <span className="label">CPC</span>
-            <span className="card__cpc-code">{card.cpc.code}</span>
-            {definition ? <span className="card__cpc-definition">{definition}</span> : null}
-          </div>
-        ) : null}
-        <dl className="card__meta card__meta--front">
-          <div>
-            <dt className="label card__meta-term">Applicant</dt>
-            <dd className="card__meta-value">{card.applicant || '—'}</dd>
-          </div>
-          <div>
-            <dt className="label card__meta-term">Inventor</dt>
-            <dd className="card__meta-value">{card.inventor || '—'}</dd>
-          </div>
-          <div>
-            <dt className="label card__meta-term">Published</dt>
-            <dd className="card__meta-value">
-              {card.publicationDate !== '' ? formatDate(card.publicationDate) : '—'}
-            </dd>
-          </div>
-        </dl>
+        <CardFrontDetails card={card} definition={definition} titleAs="h2" />
       </div>
     </>
   );

@@ -2,7 +2,7 @@ import type { PatentCard } from '../types/patent';
 import { diagramRegistry } from '../diagrams';
 import { CpcBreakdown } from './CpcBreakdown';
 import { mainGroupTitle as findMainGroupTitle } from '../cpc/cpcSymbol';
-import { formatDate } from '../cards/formatDate';
+import { CardFrontDetails } from './CardFrontDetails';
 import { useFitScale } from '../hooks/useFitScale';
 
 export type TransitionPhase = 'enter' | 'exit';
@@ -46,6 +46,8 @@ export function PatentCardView({
   const frontText = useFitScale<HTMLDivElement>(
     [
       card.displayTitle,
+      card.publicationNumber,
+      card.country,
       card.plainLanguageDescription,
       card.cpc.code,
       mainGroupTitle,
@@ -117,33 +119,7 @@ export function PatentCardView({
           {header}
           <div className="card__body">
             <div className="card__text" ref={frontText}>
-              <h1 className="card__title">{card.displayTitle}</h1>
-              <p className="card__description">{card.plainLanguageDescription}</p>
-              {card.cpc.code !== '' ? (
-                <div className="card__cpc">
-                  <span className="label">CPC</span>
-                  <span className="card__cpc-code">{card.cpc.code}</span>
-                  {mainGroupTitle ? (
-                    <span className="card__cpc-definition">{mainGroupTitle}</span>
-                  ) : null}
-                </div>
-              ) : null}
-              <dl className="card__meta card__meta--front">
-                <div>
-                  <dt className="label card__meta-term">Applicant</dt>
-                  <dd className="card__meta-value">{card.applicant || '—'}</dd>
-                </div>
-                <div>
-                  <dt className="label card__meta-term">Inventor</dt>
-                  <dd className="card__meta-value">{card.inventor || '—'}</dd>
-                </div>
-                <div>
-                  <dt className="label card__meta-term">Published</dt>
-                  <dd className="card__meta-value">
-                    {card.publicationDate !== '' ? formatDate(card.publicationDate) : '—'}
-                  </dd>
-                </div>
-              </dl>
+              <CardFrontDetails card={card} definition={mainGroupTitle} />
             </div>
 
             <figure className="card__figure">
