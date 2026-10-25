@@ -1,7 +1,6 @@
 import type { PatentCard } from '../types/patent';
 import { diagramRegistry } from '../diagrams';
 import { CpcBreakdown } from './CpcBreakdown';
-import { CpcCode } from './CpcCode';
 import { useFitScale } from '../hooks/useFitScale';
 
 export type TransitionPhase = 'enter' | 'exit';
@@ -131,7 +130,7 @@ export function PatentCardView({
               {card.cpc.code !== '' ? (
                 <div className="card__cpc">
                   <span className="label">CPC</span>
-                  <CpcCode className="card__cpc-code" code={card.cpc.code} />
+                  <span className="card__cpc-code">{card.cpc.code}</span>
                 </div>
               ) : null}
               <dl className="card__meta card__meta--front">

@@ -870,10 +870,6 @@ button {
 .cpc-rank--subgroup { --rank-colour: var(--colour-cpc-subgroup); }
 .cpc-rank--other { --rank-colour: var(--colour-text-secondary); }
 
-.cpc-code__part {
-  color: var(--rank-colour);
-}
-
 .card__flip {
   display: inline-flex;
   align-items: center;
