@@ -303,8 +303,9 @@ button {
 
 .card__cpc {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: var(--space-3);
+  gap: calc(6px * var(--fit, 1)) var(--space-3);
   padding-top: calc(10px * var(--fit, 1));
   border-top: var(--rule-width) solid var(--colour-rule);
   min-width: 0;
@@ -315,6 +316,14 @@ button {
   font-size: calc(22px * var(--fit, 1));
   letter-spacing: var(--tracking-technical);
   color: var(--colour-text-primary);
+}
+
+.card__cpc-definition {
+  flex-basis: 100%;
+  font-family: var(--font-display);
+  font-size: calc(var(--size-body) * 0.9 * var(--fit, 1));
+  line-height: 1.4;
+  color: var(--colour-text-secondary);
 }
 
 .card__meta dd {

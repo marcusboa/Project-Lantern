@@ -1,6 +1,7 @@
 import type { PatentCard } from '../types/patent';
 import { diagramRegistry } from '../diagrams';
 import { CpcBreakdown } from './CpcBreakdown';
+import { dissectCode, titleFor } from '../cpc/cpcSymbol';
 import { useFitScale } from '../hooks/useFitScale';
 
 export type TransitionPhase = 'enter' | 'exit';
@@ -52,11 +53,14 @@ export function PatentCardView({
   const Diagram = diagramRegistry[card.diagramComponent];
   const hasCpc = card.cpc.code !== '' || card.cpc.hierarchy.length > 0;
   const showBack = flipped && hasCpc;
+  const mainGroup = dissectCode(card.cpc.code)?.find((segment) => segment.rank === 'group');
+  const mainGroupTitle = mainGroup ? titleFor(card.cpc.hierarchy, mainGroup.symbol) : undefined;
   const frontText = useFitScale<HTMLDivElement>(
     [
       card.displayTitle,
       card.plainLanguageDescription,
       card.cpc.code,
+      mainGroupTitle,
       card.applicant,
       card.inventor,
       card.publicationDate,
@@ -131,6 +135,9 @@ export function PatentCardView({
                 <div className="card__cpc">
                   <span className="label">CPC</span>
                   <span className="card__cpc-code">{card.cpc.code}</span>
+                  {mainGroupTitle ? (
+                    <span className="card__cpc-definition">{mainGroupTitle}</span>
+                  ) : null}
                 </div>
               ) : null}
               <dl className="card__meta card__meta--front">
