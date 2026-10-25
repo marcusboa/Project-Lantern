@@ -5,7 +5,7 @@ import { diagramRegistry } from '../diagrams';
 import { CpcBreakdown } from './CpcBreakdown';
 import { mainGroupTitle } from '../cpc/cpcSymbol';
 import { countryOf } from '../cards/country';
-import { CardFrontDetails } from './CardFrontDetails';
+import { CardFrontDetails, CardTitle } from './CardFrontDetails';
 import { formatDate } from '../cards/formatDate';
 import { useFitScale } from '../hooks/useFitScale';
 
@@ -94,6 +94,7 @@ function FrontSlide({ card, definition }: { card: PatentCard; definition: string
   );
   return (
     <>
+      <CardTitle card={card} as="h2" />
       <figure className="ig-slide__figure">
         {card.diagramImage ? (
           <img
@@ -106,7 +107,7 @@ function FrontSlide({ card, definition }: { card: PatentCard; definition: string
         )}
       </figure>
       <div className="ig-slide__text" ref={text}>
-        <CardFrontDetails card={card} definition={definition} titleAs="h2" />
+        <CardFrontDetails card={card} definition={definition} />
       </div>
     </>
   );

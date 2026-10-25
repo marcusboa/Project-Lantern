@@ -301,6 +301,23 @@ button {
   color: var(--colour-text-secondary);
 }
 
+.card__header--name {
+  align-items: flex-start;
+}
+
+.card__name .card__title {
+  font-size: 30px;
+  line-height: 1.1;
+}
+
+.ig-slide.ig-slide--front {
+  grid-template-rows: auto minmax(0, 44fr) minmax(0, 56fr);
+}
+
+.ig-slide .card__name .card__title {
+  font-size: 28px;
+}
+
 .card__field {
   display: grid;
   gap: calc(4px * var(--fit, 1));

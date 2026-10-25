@@ -6,15 +6,20 @@ interface CardFrontDetailsProps {
   card: PatentCard;
   /** Definition of the CPC main group, shown under the code. */
   definition: string | undefined;
-  titleAs?: 'h1' | 'h2';
 }
 
-/** Labelled front-of-card text, shared by the device card and the Instagram slide. */
-export function CardFrontDetails({
-  card,
-  definition,
-  titleAs: Title = 'h1',
-}: CardFrontDetailsProps) {
+/** Labelled patent name, placed top-left on the card front. */
+export function CardTitle({ card, as: Title = 'h1' }: { card: PatentCard; as?: 'h1' | 'h2' }) {
+  return (
+    <div className="card__field card__name">
+      <span className="label">Patent name</span>
+      <Title className="card__title">{card.displayTitle}</Title>
+    </div>
+  );
+}
+
+/** Labelled front-of-card details, shared by the device card and the Instagram slide. */
+export function CardFrontDetails({ card, definition }: CardFrontDetailsProps) {
   const meta = [
     { term: 'Patent number', value: card.publicationNumber },
     { term: 'Country', value: countryOf(card) },
@@ -27,10 +32,6 @@ export function CardFrontDetails({
   ];
   return (
     <>
-      <div className="card__field">
-        <span className="label">Patent name</span>
-        <Title className="card__title">{card.displayTitle}</Title>
-      </div>
       <div className="card__field">
         <span className="label">Description</span>
         <p className="card__description">{card.plainLanguageDescription}</p>

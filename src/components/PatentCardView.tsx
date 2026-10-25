@@ -2,7 +2,7 @@ import type { PatentCard } from '../types/patent';
 import { diagramRegistry } from '../diagrams';
 import { CpcBreakdown } from './CpcBreakdown';
 import { mainGroupTitle as findMainGroupTitle } from '../cpc/cpcSymbol';
-import { CardFrontDetails } from './CardFrontDetails';
+import { CardFrontDetails, CardTitle } from './CardFrontDetails';
 import { useFitScale } from '../hooks/useFitScale';
 
 export type TransitionPhase = 'enter' | 'exit';
@@ -72,16 +72,19 @@ export function PatentCardView({
     .filter(Boolean)
     .join(' ');
 
-  const header = (
+  const status = (
+    <span className={`card__status ${statusModifier[card.curationStatus]}`}>
+      <span className="card__status-mark" aria-hidden="true" />
+      {card.curationStatus}
+    </span>
+  );
+  const backHeader = (
     <header className="card__header">
       <div className="card__eyebrow">
         <span className="label">Patent Card</span>
         <span className="card__publication">{card.publicationNumber}</span>
       </div>
-      <span className={`card__status ${statusModifier[card.curationStatus]}`}>
-        <span className="card__status-mark" aria-hidden="true" />
-        {card.curationStatus}
-      </span>
+      {status}
     </header>
   );
 
@@ -116,7 +119,10 @@ export function PatentCardView({
     >
       <div className="card__flipper">
         <div className="card__face card__face--front" inert={showBack}>
-          {header}
+          <header className="card__header card__header--name">
+            <CardTitle card={card} />
+            {status}
+          </header>
           <div className="card__body">
             <div className="card__text" ref={frontText}>
               <CardFrontDetails card={card} definition={mainGroupTitle} />
@@ -139,7 +145,7 @@ export function PatentCardView({
 
         {hasCpc ? (
           <div className="card__face card__face--back" inert={!showBack}>
-            {header}
+            {backHeader}
             <div className="card__back">
               <div className="card__back-cpc" ref={backText}>
                 <CpcBreakdown card={card} />
