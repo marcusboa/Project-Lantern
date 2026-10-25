@@ -912,23 +912,24 @@ button {
   overflow: hidden;
 }
 
-.card__meta--back {
-  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.2fr);
-  align-items: start;
+.card__meta--front {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: calc(8px * var(--fit, 1)) var(--space-5);
+  margin: 0;
+  padding-top: calc(8px * var(--fit, 1));
 }
 
-.card__meta--back .card__meta-value {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-  font-size: var(--size-label);
+.card__meta--front .card__meta-term {
+  margin-bottom: calc(3px * var(--fit, 1));
 }
 
-.card__meta--back .card__tags {
-  grid-column: auto;
-  align-self: end;
+.card__meta--front .card__meta-value {
+  font-size: calc(var(--size-meta) * min(var(--fit, 1), 1.05));
+}
+
+.card__tags--back {
+  padding-top: 8px;
+  border-top: var(--rule-width) solid var(--colour-rule);
 }
 
 .cpc {

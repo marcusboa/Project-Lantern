@@ -54,7 +54,14 @@ export function PatentCardView({
   const hasCpc = card.cpc.code !== '' || card.cpc.hierarchy.length > 0;
   const showBack = flipped && hasCpc;
   const frontText = useFitScale<HTMLDivElement>(
-    [card.displayTitle, card.plainLanguageDescription, card.cpc.code].join('|'),
+    [
+      card.displayTitle,
+      card.plainLanguageDescription,
+      card.cpc.code,
+      card.applicant,
+      card.inventor,
+      card.publicationDate,
+    ].join('|'),
     0.6,
     1.3,
   );
@@ -127,6 +134,22 @@ export function PatentCardView({
                   <CpcCode className="card__cpc-code" code={card.cpc.code} />
                 </div>
               ) : null}
+              <dl className="card__meta card__meta--front">
+                <div>
+                  <dt className="label card__meta-term">Applicant</dt>
+                  <dd className="card__meta-value">{card.applicant || '—'}</dd>
+                </div>
+                <div>
+                  <dt className="label card__meta-term">Inventor</dt>
+                  <dd className="card__meta-value">{card.inventor || '—'}</dd>
+                </div>
+                <div>
+                  <dt className="label card__meta-term">Published</dt>
+                  <dd className="card__meta-value">
+                    {card.publicationDate !== '' ? formatDate(card.publicationDate) : '—'}
+                  </dd>
+                </div>
+              </dl>
             </div>
 
             <figure className="card__figure">
@@ -151,31 +174,15 @@ export function PatentCardView({
               <div className="card__back-cpc" ref={backText}>
                 <CpcBreakdown card={card} />
               </div>
-              <dl className="card__meta card__meta--back">
-                <div>
-                  <dt className="label card__meta-term">Applicant</dt>
-                  <dd className="card__meta-value">{card.applicant}</dd>
-                </div>
-                <div>
-                  <dt className="label card__meta-term">Inventor</dt>
-                  <dd className="card__meta-value">{card.inventor}</dd>
-                </div>
-                <div>
-                  <dt className="label card__meta-term">Published</dt>
-                  <dd className="card__meta-value">
-                    {card.publicationDate !== '' ? formatDate(card.publicationDate) : '—'}
-                    <span aria-hidden="true"> · </span>
-                    {card.diagramType.replace('-', ' ').toUpperCase()}
-                  </dd>
-                </div>
-                <div className="card__tags">
+              {card.tags.length > 0 ? (
+                <div className="card__tags card__tags--back">
                   {card.tags.map((tag) => (
                     <span className="card__tag" key={tag}>
                       {tag}
                     </span>
                   ))}
                 </div>
-              </dl>
+              ) : null}
             </div>
             {footer('back')}
           </div>
