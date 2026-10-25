@@ -301,6 +301,28 @@ button {
   color: var(--colour-text-secondary);
 }
 
+.card__header--name {
+  align-items: flex-start;
+}
+
+.card__name .card__title {
+  font-size: 30px;
+  line-height: 1.1;
+}
+
+.ig-slide.ig-slide--front {
+  grid-template-rows: auto minmax(0, 44fr) minmax(0, 56fr);
+}
+
+.ig-slide .card__name .card__title {
+  font-size: 28px;
+}
+
+.card__field {
+  display: grid;
+  gap: calc(4px * var(--fit, 1));
+}
+
 .card__cpc {
   display: flex;
   flex-wrap: wrap;
@@ -1195,4 +1217,151 @@ button {
   .card--flipped .card__face--back {
     opacity: 1;
   }
+}
+
+/* ---------- Instagram export ---------- */
+
+.ig-export {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  overflow: auto;
+  background: rgb(10 10 9 / 0.96);
+}
+
+.ig-export__header,
+.ig-export__actions,
+.ig-export__slide-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ig-export__header {
+  justify-content: space-between;
+}
+
+.ig-export__slides {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-6);
+}
+
+.ig-export__slide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ig-export__slide-bar {
+  justify-content: space-between;
+}
+
+.ig-export__caption {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(100%, 900px);
+  margin: 0 auto;
+}
+
+/* 432 × 540 layout box, exported at 2.5× (1080 × 1350). Card only — no device chrome. */
+.ig-slide {
+  flex: none;
+  display: grid;
+  grid-template-rows: minmax(0, 46fr) minmax(0, 54fr);
+  gap: 16px;
+  width: 432px;
+  height: 540px;
+  padding: 26px 26px 24px;
+  overflow: hidden;
+  background: var(--colour-device-bg);
+  border: var(--rule-width) solid var(--colour-rule);
+}
+
+.ig-slide--back {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.ig-slide *,
+.ig-slide *::before,
+.ig-slide *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+.ig-slide__figure {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  margin: 0;
+  padding-bottom: 14px;
+  border-bottom: var(--rule-width) solid var(--colour-rule);
+}
+
+.ig-slide__figure {
+  position: relative;
+  overflow: hidden;
+}
+
+.ig-slide .card__diagram {
+  position: absolute;
+  inset: 0 0 14px;
+  width: 100%;
+  height: calc(100% - 14px);
+  max-height: none;
+}
+
+.ig-slide__text {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: calc(var(--space-3) * var(--fit, 1));
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ig-slide .card__description {
+  max-width: none;
+}
+
+.ig-slide__back {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ig-slide .cpc__card-title {
+  font-size: calc(var(--size-meta) * var(--fit, 1));
+  white-space: normal;
+  text-align: right;
+}
+
+.ig-slide .cpc__head .label {
+  white-space: nowrap;
+}
+
+.ig-slide .cpc__band {
+  grid-template-columns: minmax(0, 1fr);
+  gap: calc(10px * var(--fit, 1));
+}
+
+.ig-slide .cpc__summary {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.ig-slide .cpc__segment-label {
+  font-size: calc(8px * var(--fit, 1));
+}
+
+.ig-slide .cpc__summary-title {
+  display: block;
+  overflow: visible;
 }

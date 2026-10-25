@@ -1,7 +1,8 @@
 import type { PatentCard } from '../types/patent';
 import { diagramRegistry } from '../diagrams';
 import { CpcBreakdown } from './CpcBreakdown';
-import { dissectCode, titleFor } from '../cpc/cpcSymbol';
+import { mainGroupTitle as findMainGroupTitle } from '../cpc/cpcSymbol';
+import { CardFrontDetails, CardTitle } from './CardFrontDetails';
 import { useFitScale } from '../hooks/useFitScale';
 
 export type TransitionPhase = 'enter' | 'exit';
@@ -29,18 +30,6 @@ function formatSequence(value: number): string {
   return String(value).padStart(2, '0');
 }
 
-function formatDate(isoLike: string): string {
-  const [year, month, day] = isoLike.split('-');
-  if (day === undefined) return isoLike;
-  const months = [
-    'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-    'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
-  ];
-  const monthIndex = Number(month) - 1;
-  const monthLabel = months[monthIndex] ?? month;
-  return `${day} ${monthLabel} ${year}`;
-}
-
 export function PatentCardView({
   card,
   position,
@@ -53,11 +42,12 @@ export function PatentCardView({
   const Diagram = diagramRegistry[card.diagramComponent];
   const hasCpc = card.cpc.code !== '' || card.cpc.hierarchy.length > 0;
   const showBack = flipped && hasCpc;
-  const mainGroup = dissectCode(card.cpc.code)?.find((segment) => segment.rank === 'group');
-  const mainGroupTitle = mainGroup ? titleFor(card.cpc.hierarchy, mainGroup.symbol) : undefined;
+  const mainGroupTitle = findMainGroupTitle(card.cpc);
   const frontText = useFitScale<HTMLDivElement>(
     [
       card.displayTitle,
+      card.publicationNumber,
+      card.country,
       card.plainLanguageDescription,
       card.cpc.code,
       mainGroupTitle,
@@ -82,16 +72,19 @@ export function PatentCardView({
     .filter(Boolean)
     .join(' ');
 
-  const header = (
+  const status = (
+    <span className={`card__status ${statusModifier[card.curationStatus]}`}>
+      <span className="card__status-mark" aria-hidden="true" />
+      {card.curationStatus}
+    </span>
+  );
+  const backHeader = (
     <header className="card__header">
       <div className="card__eyebrow">
         <span className="label">Patent Card</span>
         <span className="card__publication">{card.publicationNumber}</span>
       </div>
-      <span className={`card__status ${statusModifier[card.curationStatus]}`}>
-        <span className="card__status-mark" aria-hidden="true" />
-        {card.curationStatus}
-      </span>
+      {status}
     </header>
   );
 
@@ -126,36 +119,13 @@ export function PatentCardView({
     >
       <div className="card__flipper">
         <div className="card__face card__face--front" inert={showBack}>
-          {header}
+          <header className="card__header card__header--name">
+            <CardTitle card={card} />
+            {status}
+          </header>
           <div className="card__body">
             <div className="card__text" ref={frontText}>
-              <h1 className="card__title">{card.displayTitle}</h1>
-              <p className="card__description">{card.plainLanguageDescription}</p>
-              {card.cpc.code !== '' ? (
-                <div className="card__cpc">
-                  <span className="label">CPC</span>
-                  <span className="card__cpc-code">{card.cpc.code}</span>
-                  {mainGroupTitle ? (
-                    <span className="card__cpc-definition">{mainGroupTitle}</span>
-                  ) : null}
-                </div>
-              ) : null}
-              <dl className="card__meta card__meta--front">
-                <div>
-                  <dt className="label card__meta-term">Applicant</dt>
-                  <dd className="card__meta-value">{card.applicant || '—'}</dd>
-                </div>
-                <div>
-                  <dt className="label card__meta-term">Inventor</dt>
-                  <dd className="card__meta-value">{card.inventor || '—'}</dd>
-                </div>
-                <div>
-                  <dt className="label card__meta-term">Published</dt>
-                  <dd className="card__meta-value">
-                    {card.publicationDate !== '' ? formatDate(card.publicationDate) : '—'}
-                  </dd>
-                </div>
-              </dl>
+              <CardFrontDetails card={card} definition={mainGroupTitle} />
             </div>
 
             <figure className="card__figure">
@@ -175,7 +145,7 @@ export function PatentCardView({
 
         {hasCpc ? (
           <div className="card__face card__face--back" inert={!showBack}>
-            {header}
+            {backHeader}
             <div className="card__back">
               <div className="card__back-cpc" ref={backText}>
                 <CpcBreakdown card={card} />
