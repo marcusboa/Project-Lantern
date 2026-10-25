@@ -13,6 +13,13 @@
   --colour-diagram-stroke: #c9c6bc;
   --colour-highlight: #f4f1ea;
 
+  /* CPC rank tints, broadest to narrowest */
+  --colour-cpc-section: #d8b46a;
+  --colour-cpc-class: #9cbf9a;
+  --colour-cpc-subclass: #86a9d6;
+  --colour-cpc-group: #d49a86;
+  --colour-cpc-subgroup: #b8a2dc;
+
   /* Typefaces — replace these three stacks to adopt licensed fonts. */
   --font-display: Georgia, 'Times New Roman', Times, serif;
   --font-interface: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,

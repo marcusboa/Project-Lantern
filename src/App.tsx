@@ -5,6 +5,7 @@ import { PatentControls } from './components/PatentControls';
 import { PatentCollectionOverview } from './components/PatentCollectionOverview';
 import { DebugInspector } from './components/DebugInspector';
 import { StudioPanel } from './components/StudioPanel';
+import { InstagramExport } from './components/InstagramExport';
 import {
   errorMessage,
   fetchCards,
@@ -31,6 +32,7 @@ interface Outgoing {
   card: PatentCard;
   position: number;
   key: number;
+  flipped: boolean;
 }
 
 function prefersReducedMotion(): boolean {
@@ -58,6 +60,7 @@ export default function App() {
   const [index, setIndex] = useState(0);
   const [reverse, setReverse] = useState(false);
   const [outgoing, setOutgoing] = useState<Outgoing | null>(null);
+  const [flippedId, setFlippedId] = useState<string | null>(null);
   const [presentation, setPresentation] = useState(false);
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
@@ -68,6 +71,7 @@ export default function App() {
   const [customCards, setCustomCards] = useState<PatentCard[]>([]);
   const [storeError, setStoreError] = useState<string | null>(null);
   const [cardsLoaded, setCardsLoaded] = useState(false);
+  const [exportCard, setExportCard] = useState<PatentCard | null>(null);
 
   const collection = useMemo(() => [...patentCards, ...customCards], [customCards]);
 
@@ -88,12 +92,18 @@ export default function App() {
       setTransitionKey(nextKey);
       setReverse(options?.reverse ?? false);
       if (!prefersReducedMotion()) {
-        setOutgoing({ card: cards[safeIndex], position: safeIndex + 1, key: nextKey });
+        setOutgoing({
+          card: cards[safeIndex],
+          position: safeIndex + 1,
+          key: nextKey,
+          flipped: flippedId === cards[safeIndex].id,
+        });
       }
       setIndex(wrapped);
+      setFlippedId(null);
       if (!options?.auto) setAutoAdvance(false);
     },
-    [cards, safeIndex, transitionKey],
+    [cards, safeIndex, transitionKey, flippedId],
   );
 
   const next = useCallback(
@@ -104,6 +114,14 @@ export default function App() {
     () => goTo(safeIndex - 1, { reverse: true }),
     [goTo, safeIndex],
   );
+  const flippableId =
+    current && (current.cpc.code !== '' || current.cpc.hierarchy.length > 0) ? current.id : null;
+  const flip = useCallback(() => {
+    if (flippableId === null) return;
+    setFlippedId((id) => (id === flippableId ? null : flippableId));
+    setAutoAdvance(false);
+  }, [flippableId]);
+
   const shuffle = useCallback(() => {
     setAutoAdvance(false);
     setOrder(() => {
@@ -209,6 +227,10 @@ export default function App() {
         (event.key === 'Enter' || event.key === ' ') &&
         target?.closest('button, a[href]') != null;
       if (inTextEntry || activatesControl) return;
+      if (exportCard !== null) {
+        if (event.key === 'Escape') setExportCard(null);
+        return;
+      }
 
       if (event.key !== 'Shift' && event.key !== 'Tab') setAutoAdvance(false);
       if (event.key === 'ArrowRight') {
@@ -221,6 +243,8 @@ export default function App() {
         if (overviewOpen) setOverviewOpen(false);
         else if (studioOpen) setStudioOpen(false);
         else setPresentation(false);
+      } else if (event.key === 'c' || event.key === 'C') {
+        flip();
       } else if (event.key === 'o' || event.key === 'O') {
         setOverviewOpen((value) => !value);
       } else if (event.key === 's' || event.key === 'S') {
@@ -230,7 +254,7 @@ export default function App() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [next, previous, overviewOpen, studioOpen]);
+  }, [next, previous, flip, overviewOpen, studioOpen, exportCard]);
 
   return (
     <main className={presentation ? 'workspace workspace--presentation' : 'workspace'}>
@@ -274,6 +298,15 @@ export default function App() {
             >
               Collection
             </button>
+            <button
+              type="button"
+              className="chrome-button"
+              onClick={flip}
+              disabled={flippableId === null}
+              aria-pressed={flippableId !== null && flippedId === flippableId}
+            >
+              Flip card (C)
+            </button>
             <button type="button" className="chrome-button" onClick={shuffle}>
               Shuffle
             </button>
@@ -295,6 +328,17 @@ export default function App() {
               aria-pressed={studioOpen}
             >
               Studio (S)
+            </button>
+            <button
+              type="button"
+              className="chrome-button"
+              disabled={!current}
+              onClick={() => {
+                if (current) setExportCard(current);
+                setAutoAdvance(false);
+              }}
+            >
+              Instagram
             </button>
             <button
               type="button"
@@ -332,6 +376,8 @@ export default function App() {
             position={outgoing.position}
             total={cards.length}
             phase="exit"
+            flipped={outgoing.flipped}
+            onFlip={flip}
           />
         ) : null}
         {current ? (
@@ -342,6 +388,8 @@ export default function App() {
             total={cards.length}
             phase="enter"
             reverse={reverse}
+            flipped={flippedId === current.id}
+            onFlip={flip}
           />
         ) : null}
         {current ? (
@@ -381,11 +429,19 @@ export default function App() {
           loaded={cardsLoaded}
           onSave={saveCard}
           onDelete={deleteCard}
+          onExport={(card) => {
+            setExportCard(card);
+            setAutoAdvance(false);
+          }}
           onClose={() => setStudioOpen(false)}
         />
       ) : null}
 
       {!presentation && inspectorOpen && current ? <DebugInspector card={current} /> : null}
+
+      {exportCard !== null ? (
+        <InstagramExport card={exportCard} onClose={() => setExportCard(null)} />
+      ) : null}
     </main>
   );
 }

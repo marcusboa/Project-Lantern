@@ -12,6 +12,7 @@ export const patentCards: PatentCard[] = [
   {
     id: 'pc-001',
     publicationNumber: 'US 20XX/0000001 A1',
+    country: 'United States',
     displayTitle: 'Adaptive Umbrella Canopy Tensioning Assembly',
     publicationDate: '20XX-03-14',
     applicant: 'Example Industrial Systems, Inc.',
@@ -38,6 +39,7 @@ export const patentCards: PatentCard[] = [
   {
     id: 'pc-002',
     publicationNumber: 'US 20XX/0000002 A1',
+    country: 'United States',
     displayTitle: 'Self-Indexing Lead Advance Mechanism',
     publicationDate: '20XX-06-02',
     applicant: 'Northfield Instrument Works (Fictional)',
@@ -64,6 +66,7 @@ export const patentCards: PatentCard[] = [
   {
     id: 'pc-003',
     publicationNumber: 'US 20XX/0000003 A1',
+    country: 'United States',
     displayTitle: 'Compound Hinge for Folding Bicycle Frames',
     publicationDate: '20XX-01-27',
     applicant: 'Meridian Cycle Components (Fictional)',
@@ -90,6 +93,7 @@ export const patentCards: PatentCard[] = [
   {
     id: 'pc-004',
     publicationNumber: 'US 20XX/0000004 A1',
+    country: 'United States',
     displayTitle: 'Pressure-Staged Immersion Brewing Vessel',
     publicationDate: '20XX-09-11',
     applicant: 'Halloway Domestic Devices (Fictional)',
@@ -116,22 +120,31 @@ export const patentCards: PatentCard[] = [
   {
     id: 'pc-005',
     publicationNumber: 'US 20XX/0000005 A1',
+    country: 'United States',
     displayTitle: 'Gimbal-Compensated Depth and Bearing Indicator',
     publicationDate: '20XX-04-30',
     applicant: 'Ardent Marine Instruments (Fictional)',
     inventor: 'E. Notional',
     plainLanguageDescription:
-      'A diving instrument whose bearing ring stays level through a nested gimbal, so depth and heading can be read in a single glance.',
+      'A diver\u2019s first-stage regulator carrying a nested-gimbal depth and bearing ring, so supply, depth and heading can be read in a single glance.',
     cpc: {
-      code: 'G01C 13/00',
+      code: 'B63C 11/2209',
       hierarchy: [
-        { symbol: 'G', title: 'Physics' },
-        { symbol: 'G01', title: 'Measuring; testing' },
+        { symbol: 'B', title: 'Performing operations; transporting' },
+        { symbol: 'B63', title: 'Ships or other waterborne vessels; related equipment' },
         {
-          symbol: 'G01C',
-          title: 'Measuring distances, levels or bearings; surveying; navigation; gyroscopic instruments',
+          symbol: 'B63C',
+          title:
+            'Launching, hauling-out, or dry-docking of vessels; life-saving in water; equipment for dwelling or working under water; means for salvaging or searching for underwater objects',
         },
-        { symbol: 'G01C 13/00', title: 'Surveying specially adapted to open water, e.g. sea or lake' },
+        {
+          symbol: 'B63C 11/00',
+          title: 'Equipment for dwelling or working underwater; means for searching for underwater objects',
+        },
+        { symbol: 'B63C 11/02', title: 'Divers\u2019 equipment' },
+        { symbol: 'B63C 11/18', title: 'Air supply' },
+        { symbol: 'B63C 11/22', title: 'Air supply carried by diver' },
+        { symbol: 'B63C 11/2209', title: 'First-stage regulators' },
       ],
     },
     diagramType: 'assembly',
@@ -144,6 +157,7 @@ export const patentCards: PatentCard[] = [
   {
     id: 'pc-006',
     publicationNumber: 'US 20XX/0000006 A1',
+    country: 'United States',
     displayTitle: 'Rotating Magnetic Drum Storage Register',
     publicationDate: '20XX-11-08',
     applicant: 'Calder Computing Laboratories (Fictional)',
@@ -173,6 +187,7 @@ export const patentCards: PatentCard[] = [
   {
     id: 'pc-007',
     publicationNumber: 'US 20XX/0000007 A1',
+    country: 'United States',
     displayTitle: 'Row-Following Seed Metering Head',
     publicationDate: '20XX-02-19',
     applicant: 'Braeside Agricultural Machinery (Fictional)',
@@ -199,6 +214,7 @@ export const patentCards: PatentCard[] = [
   {
     id: 'pc-008',
     publicationNumber: 'US 20XX/0000008 A1',
+    country: 'United States',
     displayTitle: 'Dual-Chamber Personal Acoustic Transducer',
     publicationDate: '20XX-07-23',
     applicant: 'Wrenfield Audio Systems (Fictional)',
@@ -228,6 +244,7 @@ export const patentCards: PatentCard[] = [
   {
     id: 'pc-009',
     publicationNumber: 'US 20XX/0000009 A1',
+    country: 'United States',
     displayTitle: 'Counter-Rotating Drum Laundry Agitator',
     publicationDate: '20XX-05-05',
     applicant: 'Kettleford Appliance Company (Fictional)',
@@ -254,6 +271,7 @@ export const patentCards: PatentCard[] = [
   {
     id: 'pc-010',
     publicationNumber: 'US 20XX/0000010 A1',
+    country: 'United States',
     displayTitle: 'Deployable Satellite Reflector Rib Latch',
     publicationDate: '20XX-10-16',
     applicant: 'Orbital Structures Consortium (Fictional)',
