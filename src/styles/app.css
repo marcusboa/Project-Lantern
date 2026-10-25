@@ -1283,7 +1283,16 @@ button {
   border-bottom: var(--rule-width) solid var(--colour-rule);
 }
 
+.ig-slide__figure {
+  position: relative;
+  overflow: hidden;
+}
+
 .ig-slide .card__diagram {
+  position: absolute;
+  inset: 0 0 14px;
+  width: 100%;
+  height: calc(100% - 14px);
   max-height: none;
 }
 
