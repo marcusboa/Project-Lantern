@@ -6,8 +6,8 @@ neutral workspace, a preview label, and development-only controls around it.
 
 The shipped content is fictional mock data, a single TypeScript array that can later be replaced
 with records from an internal system. Cards authored in the Studio are saved by a small local card
-server (Node + SQLite). There is no authentication, no external network access, and no patent
-scraping.
+server (Node + SQLite). Outside localhost the server requires a password (see
+[DEPLOY.md](DEPLOY.md)). There is no external network access and no patent scraping.
 
 ## Run locally
 
@@ -24,9 +24,12 @@ npm run build
 npm start        # http://127.0.0.1:8787
 ```
 
-`npm start` listens on `127.0.0.1` by default. Set `HOST=0.0.0.0` to reach it from other machines
-on the network — the card API has no authentication, so only do this on a trusted network. `PORT`
-changes the port.
+`npm start` listens on `127.0.0.1` by default; `PORT` changes the port. To reach it from other
+machines, set `HOST=0.0.0.0` and `LANTERN_PASSWORD` (12+ characters; `LANTERN_USER` defaults to
+`lantern`). The server refuses to listen beyond localhost without a password, and the password
+then protects the whole site, Studio and card API included.
+
+To put it on a private website (Docker + automatic HTTPS), see [DEPLOY.md](DEPLOY.md).
 
 Other scripts: `npm run preview`, `npm run lint`, `npm run typecheck`.
 

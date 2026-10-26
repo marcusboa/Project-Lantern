@@ -1,0 +1,33 @@
+# Private Project Lantern site: the app behind Caddy, which gets and renews the HTTPS
+# certificate for LANTERN_DOMAIN automatically. Settings come from .env (see .env.example).
+services:
+  lantern:
+    build: .
+    restart: unless-stopped
+    environment:
+      LANTERN_USER: ${LANTERN_USER:-lantern}
+      LANTERN_PASSWORD: ${LANTERN_PASSWORD:?Set LANTERN_PASSWORD in .env}
+      TRUST_PROXY: '1'
+    volumes:
+      - lantern-data:/data
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - lantern
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    environment:
+      LANTERN_DOMAIN: ${LANTERN_DOMAIN:?Set LANTERN_DOMAIN in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  lantern-data:
+  caddy-data:
+  caddy-config:
