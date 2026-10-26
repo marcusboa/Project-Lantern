@@ -1,0 +1,4 @@
+{$LANTERN_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy lantern:8787
+}

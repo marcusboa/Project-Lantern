@@ -25,3 +25,6 @@ dist-ssr
 
 # Studio card database and uploaded diagrams
 /data/
+
+# Deployment secrets
+.env
