@@ -1,5 +1,5 @@
 import type { PatentCard } from '../types/patent';
-import { diagramRegistry } from '../diagrams';
+import { CardDiagram } from './CardDiagram';
 import { CpcBreakdown } from './CpcBreakdown';
 import { mainGroupTitle as findMainGroupTitle } from '../cpc/cpcSymbol';
 import { CardFrontDetails, CardTitle } from './CardFrontDetails';
@@ -39,7 +39,6 @@ export function PatentCardView({
   flipped,
   onFlip,
 }: PatentCardViewProps) {
-  const Diagram = diagramRegistry[card.diagramComponent];
   const hasCpc = card.cpc.code !== '' || card.cpc.hierarchy.length > 0;
   const showBack = flipped && hasCpc;
   const mainGroupTitle = findMainGroupTitle(card.cpc);
@@ -129,15 +128,7 @@ export function PatentCardView({
             </div>
 
             <figure className="card__figure">
-              {card.diagramImage ? (
-                <img
-                  className="card__diagram card__diagram--bitmap"
-                  src={card.diagramImage.src}
-                  alt={card.diagramImage.alt || `Diagram for ${card.displayTitle}`}
-                />
-              ) : (
-                <Diagram className="card__diagram" title={`Diagram for ${card.displayTitle}`} />
-              )}
+              <CardDiagram card={card} />
             </figure>
           </div>
           {footer('front')}

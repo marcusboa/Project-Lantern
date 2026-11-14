@@ -7,6 +7,11 @@ import type { PatentCard } from '../src/types/patent';
 
 const DATA_URL_PATTERN = /^data:image\/(png|jpeg|gif|webp);base64,([A-Za-z0-9+/=]+)$/;
 const EXTENSIONS: Record<string, string> = { png: 'png', jpeg: 'jpg', gif: 'gif', webp: 'webp' };
+const IMAGE_FIELDS = ['diagramImage', 'secondaryDiagramImage'] as const;
+
+function imageSources(card: PatentCard | null): string[] {
+  return IMAGE_FIELDS.flatMap((field) => card?.[field]?.src ?? []);
+}
 
 export interface CardStore {
   imagesDir: string;
@@ -50,8 +55,11 @@ export function openCardStore(dataDir = resolveDataDir()): CardStore {
       updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
   `);
   const deleteOne = db.prepare<[string]>('DELETE FROM cards WHERE id = ?');
-  const selectImageUse = db.prepare<[string], { id: string }>(
-    "SELECT id FROM cards WHERE json_extract(card, '$.diagramImage.src') = ? LIMIT 1",
+  const selectImageUse = db.prepare<[{ src: string }], { id: string }>(
+    `SELECT id FROM cards
+     WHERE json_extract(card, '$.diagramImage.src') = @src
+        OR json_extract(card, '$.secondaryDiagramImage.src') = @src
+     LIMIT 1`,
   );
 
   const read = (row: { card: string } | undefined): PatentCard | null => {
@@ -63,25 +71,32 @@ export function openCardStore(dataDir = resolveDataDir()): CardStore {
     }
   };
 
-  /** Writes an inline data URL to disk and returns the URL the browser should load it from. */
-  const storeImage = (card: PatentCard): PatentCard => {
-    const match = card.diagramImage ? DATA_URL_PATTERN.exec(card.diagramImage.src) : null;
-    if (card.diagramImage === undefined || match === null) return card;
-    const file = `${card.id.replace(/[^A-Za-z0-9-]/g, '').slice(0, 48) || 'card'}-${randomUUID().slice(0, 8)}.${EXTENSIONS[match[1]]}`;
-    writeFileSync(path.join(imagesDir, file), Buffer.from(match[2], 'base64'));
-    return { ...card, diagramImage: { ...card.diagramImage, src: `${IMAGE_ROUTE}${file}` } };
+  /** Writes inline data URLs to disk and points the card at the URLs the browser should load. */
+  const storeImages = (card: PatentCard): PatentCard => {
+    let stored = card;
+    for (const field of IMAGE_FIELDS) {
+      const image = card[field];
+      const match = image ? DATA_URL_PATTERN.exec(image.src) : null;
+      if (image === undefined || match === null) continue;
+      const file = `${card.id.replace(/[^A-Za-z0-9-]/g, '').slice(0, 48) || 'card'}-${randomUUID().slice(0, 8)}.${EXTENSIONS[match[1]]}`;
+      writeFileSync(path.join(imagesDir, file), Buffer.from(match[2], 'base64'));
+      stored = { ...stored, [field]: { ...image, src: `${IMAGE_ROUTE}${file}` } };
+    }
+    return stored;
   };
 
-  const discardImage = (previous: PatentCard | null, next: PatentCard | null) => {
-    const src = previous?.diagramImage?.src;
-    if (src === undefined || src === next?.diagramImage?.src || !src.startsWith(IMAGE_ROUTE)) return;
-    if (selectImageUse.get(src) !== undefined) return;
-    const file = src.slice(IMAGE_ROUTE.length);
-    if (!IMAGE_FILE_PATTERN.test(file)) return;
-    try {
-      unlinkSync(path.join(imagesDir, file));
-    } catch {
-      // Already gone; nothing to reclaim.
+  const discardImages = (previous: PatentCard | null, next: PatentCard | null) => {
+    const kept = new Set(imageSources(next));
+    for (const src of imageSources(previous)) {
+      if (kept.has(src) || !src.startsWith(IMAGE_ROUTE)) continue;
+      if (selectImageUse.get({ src }) !== undefined) continue;
+      const file = src.slice(IMAGE_ROUTE.length);
+      if (!IMAGE_FILE_PATTERN.test(file)) continue;
+      try {
+        unlinkSync(path.join(imagesDir, file));
+      } catch {
+        // Already gone; nothing to reclaim.
+      }
     }
   };
 
@@ -91,15 +106,15 @@ export function openCardStore(dataDir = resolveDataDir()): CardStore {
     has: (id) => selectOne.get(id) !== undefined,
     save: (card) => {
       const previous = read(selectOne.get(card.id));
-      const stored = storeImage(card);
+      const stored = storeImages(card);
       upsert.run(stored.id, JSON.stringify(stored));
-      discardImage(previous, stored);
+      discardImages(previous, stored);
       return stored;
     },
     remove: (id) => {
       const previous = read(selectOne.get(id));
       deleteOne.run(id);
-      discardImage(previous, null);
+      discardImages(previous, null);
     },
   };
 }

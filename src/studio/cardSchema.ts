@@ -1,4 +1,11 @@
-import type { CurationStatus, DiagramKey, DiagramType, PatentCard } from '../types/patent';
+import type {
+  BitmapDiagram,
+  CurationStatus,
+  DiagramKey,
+  DiagramLayout,
+  DiagramType,
+  PatentCard,
+} from '../types/patent';
 
 /**
  * Validation shared by the browser and the card server. Kept free of React and DOM imports so
@@ -19,6 +26,8 @@ export const DIAGRAM_TYPES: DiagramType[] = [
   'schematic',
   'exploded',
 ];
+
+export const DIAGRAM_LAYOUTS: DiagramLayout[] = ['single', 'side-by-side', 'inset'];
 
 const DIAGRAM_KEY_SET: Record<DiagramKey, true> = {
   umbrella: true,
@@ -56,6 +65,12 @@ export function isDiagramSource(src: string): boolean {
   );
 }
 
+function parseImage(value: unknown): BitmapDiagram | null {
+  if (!isRecord(value)) return null;
+  const src = asString(value.src);
+  return isDiagramSource(src) ? { src, alt: asString(value.alt) } : null;
+}
+
 /** Coerces untrusted input into a PatentCard, or returns null when it has no id or title. */
 export function parseCard(value: unknown): PatentCard | null {
   if (!isRecord(value)) return null;
@@ -68,8 +83,9 @@ export function parseCard(value: unknown): PatentCard | null {
   const diagramKey = asString(value.diagramComponent) as DiagramKey;
   const diagramType = asString(value.diagramType) as DiagramType;
   const status = asString(value.curationStatus) as CurationStatus;
-  const imageSource = isRecord(value.diagramImage) ? value.diagramImage : null;
-  const src = imageSource ? asString(imageSource.src) : '';
+  const image = parseImage(value.diagramImage);
+  const secondaryImage = parseImage(value.secondaryDiagramImage);
+  const layout = asString(value.diagramLayout) as DiagramLayout;
 
   return {
     id,
@@ -88,7 +104,10 @@ export function parseCard(value: unknown): PatentCard | null {
     },
     diagramType: DIAGRAM_TYPES.includes(diagramType) ? diagramType : 'schematic',
     diagramComponent: DIAGRAM_KEYS.includes(diagramKey) ? diagramKey : DIAGRAM_KEYS[0],
-    ...(isDiagramSource(src) ? { diagramImage: { src, alt: asString(imageSource?.alt) } } : {}),
+    ...(image ? { diagramImage: image } : {}),
+    ...(secondaryImage && layout !== 'single' && DIAGRAM_LAYOUTS.includes(layout)
+      ? { diagramLayout: layout, secondaryDiagramImage: secondaryImage }
+      : {}),
     sourceReference: asString(value.sourceReference),
     curationStatus: CURATION_STATUSES.includes(status) ? status : 'Draft',
     tags: Array.isArray(value.tags) ? value.tags.filter((tag) => typeof tag === 'string') : [],

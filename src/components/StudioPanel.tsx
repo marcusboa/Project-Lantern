@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   CURATION_STATUSES,
   DIAGRAM_KEYS,
+  DIAGRAM_LAYOUTS,
   DIAGRAM_TYPES,
 } from "../studio/cardSchema";
 import { createCardId, type SaveResult } from "../studio/cardStore";
@@ -11,6 +12,7 @@ import type {
   BitmapDiagram,
   CurationStatus,
   DiagramKey,
+  DiagramLayout,
   DiagramType,
   PatentCard,
 } from "../types/patent";
@@ -43,6 +45,8 @@ interface StudioForm {
   diagramType: DiagramType;
   diagramComponent: DiagramKey;
   diagramImage: BitmapDiagram | null;
+  diagramLayout: DiagramLayout;
+  secondaryDiagramImage: BitmapDiagram | null;
   sourceReference: string;
   curationStatus: CurationStatus;
   tags: string;
@@ -54,6 +58,14 @@ B63 | Ships or other waterborne vessels; related equipment
 B63C | Launching, hauling-out, or dry-docking of vessels; life-saving in water; …
 B63C 11/00 | Equipment for dwelling or working under water; …
 B63C 11/02 | Divers' equipment`;
+
+type ImageField = "diagramImage" | "secondaryDiagramImage";
+
+const LAYOUT_LABELS: Record<DiagramLayout, string> = {
+  single: "1. One diagram",
+  "side-by-side": "2. Two diagrams side by side",
+  inset: "3. Main diagram + smaller inset",
+};
 
 const emptyForm: StudioForm = {
   id: null,
@@ -69,6 +81,8 @@ const emptyForm: StudioForm = {
   diagramType: "schematic",
   diagramComponent: DIAGRAM_KEYS[0],
   diagramImage: null,
+  diagramLayout: "single",
+  secondaryDiagramImage: null,
   sourceReference: "",
   curationStatus: "Draft",
   tags: "",
@@ -92,6 +106,8 @@ function toForm(card: PatentCard): StudioForm {
     diagramType: card.diagramType,
     diagramComponent: card.diagramComponent,
     diagramImage: card.diagramImage ?? null,
+    diagramLayout: card.diagramLayout ?? "single",
+    secondaryDiagramImage: card.secondaryDiagramImage ?? null,
     sourceReference: card.sourceReference,
     curationStatus: card.curationStatus,
     tags: card.tags.join(", "),
@@ -133,6 +149,12 @@ function toCard(form: StudioForm): PatentCard {
     diagramType: form.diagramType,
     diagramComponent: form.diagramComponent,
     ...(form.diagramImage ? { diagramImage: form.diagramImage } : {}),
+    ...(form.diagramLayout !== "single" && form.secondaryDiagramImage
+      ? {
+          diagramLayout: form.diagramLayout,
+          secondaryDiagramImage: form.secondaryDiagramImage,
+        }
+      : {}),
     sourceReference: form.sourceReference.trim(),
     curationStatus: form.curationStatus,
     tags: form.tags
@@ -163,12 +185,12 @@ export function StudioPanel({
     setMessage(null);
   };
 
-  const handleImage = async (file: File | undefined) => {
+  const handleImage = async (field: ImageField, file: File | undefined) => {
     if (file === undefined) return;
     setError(null);
     try {
       const image = await readDiagramImage(file);
-      update("diagramImage", { ...image, alt: form.diagramImage?.alt ?? "" });
+      update(field, { ...image, alt: form[field]?.alt ?? "" });
     } catch (cause) {
       setError(
         cause instanceof Error
@@ -181,6 +203,10 @@ export function StudioPanel({
   const saveForm = async (): Promise<PatentCard | null> => {
     if (form.displayTitle.trim() === "") {
       setError("A title is required.");
+      return null;
+    }
+    if (form.diagramLayout !== "single" && form.secondaryDiagramImage === null) {
+      setError("Upload a second diagram, or set the layout to One diagram.");
       return null;
     }
     setBusy(true);
@@ -392,6 +418,23 @@ export function StudioPanel({
               </select>
             </label>
             <label className="studio__field">
+              <span className="label">Diagram layout</span>
+              <select
+                className="studio__input"
+                name="diagramLayout"
+                value={form.diagramLayout}
+                onChange={(event) =>
+                  update("diagramLayout", event.target.value as DiagramLayout)
+                }
+              >
+                {DIAGRAM_LAYOUTS.map((layout) => (
+                  <option key={layout} value={layout}>
+                    {LAYOUT_LABELS[layout]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="studio__field">
               <span className="label">Fallback line diagram</span>
               <select
                 className="studio__input"
@@ -410,14 +453,14 @@ export function StudioPanel({
               </select>
             </label>
             <label className="studio__field">
-              <span className="label">Bitmap diagram</span>
+              <span className="label">Main diagram (bitmap)</span>
               <input
                 className="studio__input studio__input--file"
                 name="diagramImage"
                 type="file"
                 accept="image/*"
                 onChange={(event) => {
-                  void handleImage(event.target.files?.[0]);
+                  void handleImage("diagramImage", event.target.files?.[0]);
                   event.target.value = "";
                 }}
               />
@@ -439,6 +482,50 @@ export function StudioPanel({
                 }
               />
             </label>
+            {form.diagramLayout !== "single" ? (
+              <>
+                <label className="studio__field">
+                  <span className="label">
+                    {form.diagramLayout === "inset"
+                      ? "Inset diagram (bitmap)"
+                      : "Second diagram (bitmap)"}
+                  </span>
+                  <input
+                    className="studio__input studio__input--file"
+                    name="secondaryDiagramImage"
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => {
+                      void handleImage(
+                        "secondaryDiagramImage",
+                        event.target.files?.[0],
+                      );
+                      event.target.value = "";
+                    }}
+                  />
+                </label>
+                <label className="studio__field">
+                  <span className="label">Second diagram alt text</span>
+                  <input
+                    className="studio__input"
+                    name="secondaryDiagramAlt"
+                    value={form.secondaryDiagramImage?.alt ?? ""}
+                    disabled={form.secondaryDiagramImage === null}
+                    onChange={(event) =>
+                      update(
+                        "secondaryDiagramImage",
+                        form.secondaryDiagramImage
+                          ? {
+                              ...form.secondaryDiagramImage,
+                              alt: event.target.value,
+                            }
+                          : null,
+                      )
+                    }
+                  />
+                </label>
+              </>
+            ) : null}
             <label className="studio__field">
               <span className="label">Internal source reference</span>
               <input
@@ -472,7 +559,23 @@ export function StudioPanel({
                   className="chrome-button"
                   onClick={() => update("diagramImage", null)}
                 >
-                  Remove image
+                  Remove main image
+                </button>
+              </div>
+            ) : null}
+            {form.diagramLayout !== "single" && form.secondaryDiagramImage ? (
+              <div className="studio__field studio__field--inline">
+                <img
+                  className="studio__thumb"
+                  src={form.secondaryDiagramImage.src}
+                  alt=""
+                />
+                <button
+                  type="button"
+                  className="chrome-button"
+                  onClick={() => update("secondaryDiagramImage", null)}
+                >
+                  Remove second image
                 </button>
               </div>
             ) : null}
