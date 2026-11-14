@@ -1,4 +1,9 @@
-import type { PatentCard } from '../types/patent';
+import type { BitmapDiagram, PatentCard } from '../types/patent';
+
+function shorten(image: BitmapDiagram | undefined): BitmapDiagram | undefined {
+  if (image === undefined || image.src.length <= 120) return image;
+  return { ...image, src: `${image.src.slice(0, 48)}… (${image.src.length} chars)` };
+}
 
 interface DebugInspectorProps {
   card: PatentCard;
@@ -15,15 +20,7 @@ export function DebugInspector({ card }: DebugInspectorProps) {
       </div>
       <pre className="inspector__json">
         {JSON.stringify(
-          card.diagramImage && card.diagramImage.src.length > 120
-            ? {
-                ...card,
-                diagramImage: {
-                  ...card.diagramImage,
-                  src: `${card.diagramImage.src.slice(0, 48)}… (${card.diagramImage.src.length} chars)`,
-                },
-              }
-            : card,
+          { ...card, diagramImage: shorten(card.diagramImage), secondaryDiagramImage: shorten(card.secondaryDiagramImage) },
           null,
           2,
         )}

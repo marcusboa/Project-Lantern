@@ -141,6 +141,10 @@ everything else is re-encoded as JPEG) and sent with the card; the server writes
 file and the card then references it by URL. A bitmap takes precedence over the selected line
 diagram.
 
+The **Diagram layout** setting chooses how the front shows its diagrams: one diagram, two diagrams
+side by side, or a main diagram with a smaller inset in its lower-right corner. The second bitmap
+is only kept for the two-diagram layouts. The Instagram export uses the same layout.
+
 ### Where Studio cards are stored
 
 Cards are saved on the card server, not in the browser, so every browser pointed at the same

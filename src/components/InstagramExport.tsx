@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
 import type { PatentCard } from '../types/patent';
-import { diagramRegistry } from '../diagrams';
+import { CardDiagram } from './CardDiagram';
 import { CpcBreakdown } from './CpcBreakdown';
 import { mainGroupTitle } from '../cpc/cpcSymbol';
 import { countryOf } from '../cards/country';
@@ -79,7 +79,6 @@ async function downloadSlide(node: HTMLElement, filename: string) {
 }
 
 function FrontSlide({ card, definition }: { card: PatentCard; definition: string | undefined }) {
-  const Diagram = diagramRegistry[card.diagramComponent];
   const text = useFitScale<HTMLDivElement>(
     JSON.stringify([card.displayTitle, card.plainLanguageDescription, card.cpc.code, definition]) +
       [
@@ -96,15 +95,7 @@ function FrontSlide({ card, definition }: { card: PatentCard; definition: string
     <>
       <CardTitle card={card} as="h2" />
       <figure className="ig-slide__figure">
-        {card.diagramImage ? (
-          <img
-            className="card__diagram card__diagram--bitmap"
-            src={card.diagramImage.src}
-            alt={card.diagramImage.alt || `Diagram for ${card.displayTitle}`}
-          />
-        ) : (
-          <Diagram className="card__diagram" title={`Diagram for ${card.displayTitle}`} />
-        )}
+        <CardDiagram card={card} />
       </figure>
       <div className="ig-slide__text" ref={text}>
         <CardFrontDetails card={card} definition={definition} />

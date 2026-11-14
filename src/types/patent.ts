@@ -43,6 +43,9 @@ export interface BitmapDiagram {
   alt: string;
 }
 
+/** How a card arranges its diagrams; anything but `single` needs `secondaryDiagramImage`. */
+export type DiagramLayout = 'single' | 'side-by-side' | 'inset';
+
 export interface PatentCard {
   id: string;
   publicationNumber: string;
@@ -59,6 +62,10 @@ export interface PatentCard {
   diagramComponent: DiagramKey;
   /** Takes precedence over diagramComponent when present. */
   diagramImage?: BitmapDiagram;
+  /** Defaults to `single` when absent. */
+  diagramLayout?: DiagramLayout;
+  /** Second Studio bitmap: shown beside the main diagram or as an inset over it. */
+  secondaryDiagramImage?: BitmapDiagram;
   /** Internal-only provenance field. Never rendered in the device card view. */
   sourceReference: string;
   curationStatus: CurationStatus;
